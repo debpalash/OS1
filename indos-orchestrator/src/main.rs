@@ -25,6 +25,7 @@ mod ipc;
 mod ollama;
 mod router;
 mod session;
+mod tools;
 
 use anyhow::Result;
 use indos_context_engine::{ContextEngine, MemorySource, new_memory};
@@ -56,7 +57,7 @@ impl Default for Config {
 
 /// The IndOS system prompt — defines how the OS talks
 fn indos_system_prompt() -> String {
-    r#"You are IndOS, an AI-native operating system assistant. You ARE the desktop.
+    let base = r#"You are IndOS, an AI-native operating system assistant. You ARE the desktop.
 
 Your role:
 - You help the user interact with their Linux system through conversation
@@ -72,8 +73,9 @@ Personality:
 - You ask for confirmation before destructive operations
 
 When asked to do something on the system, describe what you'll do, then do it.
-When asked to show something, describe it and generate a fragment if appropriate."#
-        .to_string()
+When asked to show something, describe it and generate a fragment if appropriate."#;
+
+    format!("{}{}", base, tools::tools_prompt())
 }
 
 /// Shared orchestrator state
