@@ -1,0 +1,80 @@
+# IndOS ISO Package List
+# Base packages for the bootable generative desktop
+
+# === BASE SYSTEM ===
+base
+linux
+linux-firmware
+mkinitcpio
+mkinitcpio-archiso
+
+# === BOOT ===
+grub
+efibootmgr
+syslinux
+
+# === NETWORKING ===
+networkmanager
+iwd
+openssh
+
+# === DISPLAY ===
+mesa
+vulkan-intel
+vulkan-radeon
+xdg-desktop-portal
+xdg-desktop-portal-gtk
+
+# === COMPOSITOR ===
+niri
+
+# === STATUS BAR + NOTIFICATIONS ===
+waybar
+swaynotificationcenter
+
+# === DISPLAY MANAGER ===
+greetd
+greetd-tuigreet
+
+# === AUDIO ===
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+
+# === TERMINAL ===
+foot
+alacritty
+
+# === SHELL ===
+zsh
+starship
+
+# === FONTS ===
+ttf-inter
+ttf-jetbrains-mono-nerd
+noto-fonts
+noto-fonts-emoji
+
+# === AI STACK ===
+ollama
+python-pip
+python-numpy
+
+# === BUILD TOOLS (for development) ===
+base-devel
+git
+rustup
+gcc
+
+# === UTILITIES ===
+htop
+btop
+fastfetch
+man-db
+less
+nano
+vim
+wget
+curl
+unzip

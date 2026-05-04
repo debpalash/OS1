@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=IndOS
+Comment=IndOS Generative Desktop
+Exec=indos-session
+Type=Application
+DesktopNames=IndOS

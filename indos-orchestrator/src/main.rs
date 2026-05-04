@@ -27,6 +27,7 @@ mod router;
 mod session;
 
 use anyhow::Result;
+use indos_context_engine::{ContextEngine, MemorySource, new_memory};
 use ipc::{IpcServer, OrchestratorMessage, ShellMessage};
 use ollama::{ChatMessage, OllamaClient};
 use session::SessionManager;
@@ -38,6 +39,7 @@ use tracing_subscriber::EnvFilter;
 struct Config {
     ollama_url: String,
     ollama_model: String,
+    embedding_model: String,
     system_prompt: String,
 }
 
@@ -46,6 +48,7 @@ impl Default for Config {
         Self {
             ollama_url: "http://localhost:11434".into(),
             ollama_model: "qwen2.5:0.5b".into(),
+            embedding_model: "nomic-embed-text".into(),
             system_prompt: indos_system_prompt(),
         }
     }
@@ -77,6 +80,7 @@ When asked to show something, describe it and generate a fragment if appropriate
 struct OrchestratorState {
     ollama: OllamaClient,
     sessions: SessionManager,
+    context: ContextEngine,
     /// Conversation history for the active session
     conversation: Vec<ChatMessage>,
     system_prompt: String,
@@ -110,10 +114,28 @@ async fn main() -> Result<()> {
         ),
     }
 
+    // Initialize context engine (LanceDB)
+    let data_dir = dirs::data_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("."))
+        .join("indos");
+    let db_path = data_dir.join("context.lance");
+    let mut context = ContextEngine::new(
+        db_path.to_str().unwrap_or("./context.lance"),
+        &config.embedding_model,
+    );
+    match context.init().await {
+        Ok(()) => {
+            let count = context.count().await.unwrap_or(0);
+            tracing::info!("✓ Context engine ready ({} memories)", count);
+        }
+        Err(e) => tracing::warn!("⚠ Context engine failed to init: {}", e),
+    }
+
     // Initialize state
     let state = Arc::new(Mutex::new(OrchestratorState {
         ollama,
         sessions: SessionManager::new(),
+        context,
         conversation: vec![ChatMessage {
             role: "system".into(),
             content: config.system_prompt.clone(),
@@ -159,6 +181,15 @@ async fn handle_message(
         } => {
             tracing::info!("User: {}", content);
 
+            // Remember user message in context engine
+            {
+                let state = state.lock().await;
+                let memory = new_memory(&content, MemorySource::Conversation);
+                if let Err(e) = state.context.remember(memory).await {
+                    tracing::debug!("Context remember failed: {}", e);
+                }
+            }
+
             // Add user message to conversation
             {
                 let mut state = state.lock().await;
@@ -193,13 +224,17 @@ async fn handle_message(
                 Ok(response) => {
                     tracing::info!("Assistant: {} chars", response.len());
 
-                    // Add assistant message to conversation history
+                    // Add assistant message to conversation history + context
                     {
                         let mut state = state.lock().await;
                         state.conversation.push(ChatMessage {
                             role: "assistant".into(),
                             content: response.clone(),
                         });
+                        let memory = new_memory(&response, MemorySource::Conversation);
+                        if let Err(e) = state.context.remember(memory).await {
+                            tracing::debug!("Context remember failed: {}", e);
+                        }
                     }
 
                     let _ = resp_tx
