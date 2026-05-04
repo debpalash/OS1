@@ -82,4 +82,8 @@ https://github.com/rauc/rauc                        # RAUC - A/B partition OTA u
 # MCP (Model Context Protocol) - tool exposure standard
 # AG-UI - agent↔frontend event transport
 # A2UI - declarative generative UI specification
-https://github.com/cloudflare/capnweb             # Cap'n Web - object-capability RPC (kept for future JS fragment ↔ orchestrator communication)
+https://github.com/cloudflare/capnweb             # Cap'n Web - object-capability RPC (kept for future JS fragment ↔ 
+
+
+#MEGA LIST TOPIC
+https://github.com/topics/browser-use

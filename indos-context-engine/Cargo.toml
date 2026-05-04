@@ -4,27 +4,32 @@ version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0"
 authors = ["IndOS Contributors"]
-description = "IndOS context engine — LanceDB vector memory + embeddings + temporal patterns"
+description = "IndOS context engine — LanceDB vector memory + Ollama embeddings"
 
 [dependencies]
 # Vector database
 lancedb = "0.15"
 
-# Embeddings (will call local model via Ollama)
+# Arrow for record batch I/O
+arrow-array = "53"
+arrow-schema = "53"
+
+# Embeddings (Ollama HTTP API)
 reqwest = { version = "0.12", features = ["json"] }
 
-# Core
+# Async
 tokio = { version = "1", features = ["full"] }
+futures = "0.3"
+
+# Serialization
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
-# Time/temporal
+# Time
 chrono = { version = "0.4", features = ["serde"] }
 
-# Storage
+# Utils
 dirs = "5"
 uuid = { version = "1", features = ["v4"] }
-
-# Logging
 tracing = "0.1"
 anyhow = "1"
