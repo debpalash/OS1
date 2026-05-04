@@ -26,6 +26,7 @@ mod ollama;
 mod router;
 mod session;
 mod tools;
+mod tool_parser;
 
 use anyhow::Result;
 use indos_context_engine::{ContextEngine, MemorySource, new_memory};
@@ -133,15 +134,26 @@ async fn main() -> Result<()> {
         Err(e) => tracing::warn!("⚠ Context engine failed to init: {}", e),
     }
 
+    // Initialize session manager and restore previous session
+    let mut sessions = SessionManager::new();
+    let (session_id, restored_messages) = sessions.load_or_create();
+    let conversation = if restored_messages.is_empty() {
+        tracing::info!("New session: {}", session_id);
+        vec![ChatMessage {
+            role: "system".into(),
+            content: config.system_prompt.clone(),
+        }]
+    } else {
+        tracing::info!("Restored session: {} ({} messages)", session_id, restored_messages.len());
+        restored_messages
+    };
+
     // Initialize state
     let state = Arc::new(Mutex::new(OrchestratorState {
         ollama,
-        sessions: SessionManager::new(),
+        sessions,
         context,
-        conversation: vec![ChatMessage {
-            role: "system".into(),
-            content: config.system_prompt.clone(),
-        }],
+        conversation,
         system_prompt: config.system_prompt,
     }));
 
@@ -216,7 +228,6 @@ async fn handle_message(
                     .chat_stream(&messages, |chunk| {
                         let tx = resp_tx_clone.clone();
                         let content = chunk.to_string();
-                        // Fire-and-forget the chunk send
                         let _ = tx.try_send(OrchestratorMessage::Chunk { content });
                     })
                     .await
@@ -226,24 +237,105 @@ async fn handle_message(
                 Ok(response) => {
                     tracing::info!("Assistant: {} chars", response.len());
 
-                    // Add assistant message to conversation history + context
-                    {
-                        let mut state = state.lock().await;
-                        state.conversation.push(ChatMessage {
-                            role: "assistant".into(),
-                            content: response.clone(),
-                        });
-                        let memory = new_memory(&response, MemorySource::Conversation);
-                        if let Err(e) = state.context.remember(memory).await {
-                            tracing::debug!("Context remember failed: {}", e);
-                        }
-                    }
+                    // Parse response for tool calls
+                    let parsed = tool_parser::parse_tool_calls(&response);
 
-                    let _ = resp_tx
-                        .send(OrchestratorMessage::Done {
-                            full_response: response,
-                        })
-                        .await;
+                    if !parsed.tool_calls.is_empty() {
+                        tracing::info!("Found {} tool call(s)", parsed.tool_calls.len());
+
+                        // Send the text portion to the shell
+                        if !parsed.text.is_empty() {
+                            let _ = resp_tx.try_send(OrchestratorMessage::Chunk {
+                                content: parsed.text.clone(),
+                            });
+                        }
+
+                        // Execute tools
+                        let tool_output = tool_parser::execute_tool_calls(&parsed.tool_calls).await;
+                        tracing::info!("Tool output: {} chars", tool_output.len());
+
+                        // Feed tool results back into conversation
+                        {
+                            let mut state = state.lock().await;
+                            state.conversation.push(ChatMessage {
+                                role: "assistant".into(),
+                                content: response.clone(),
+                            });
+                            state.conversation.push(ChatMessage {
+                                role: "user".into(),
+                                content: format!("[Tool results]:\n{}", tool_output),
+                            });
+                        }
+
+                        // Get updated conversation for follow-up
+                        let messages = {
+                            let state = state.lock().await;
+                            state.conversation.clone()
+                        };
+
+                        // LLM generates follow-up with tool results
+                        let resp_tx_clone2 = resp_tx.clone();
+                        let followup = {
+                            let state_guard = state.lock().await;
+                            state_guard
+                                .ollama
+                                .chat_stream(&messages, |chunk| {
+                                    let tx = resp_tx_clone2.clone();
+                                    let content = chunk.to_string();
+                                    let _ = tx.try_send(OrchestratorMessage::Chunk { content });
+                                })
+                                .await
+                        };
+
+                        match followup {
+                            Ok(followup_response) => {
+                                let mut state = state.lock().await;
+                                state.conversation.push(ChatMessage {
+                                    role: "assistant".into(),
+                                    content: followup_response.clone(),
+                                });
+                                let memory = new_memory(&followup_response, MemorySource::Conversation);
+                                if let Err(e) = state.context.remember(memory).await {
+                                    tracing::debug!("Context remember failed: {}", e);
+                                }
+                                let _ = resp_tx
+                                    .send(OrchestratorMessage::Done {
+                                        full_response: followup_response,
+                                    })
+                                    .await;
+                            }
+                            Err(e) => {
+                                // Tool results are still useful even if follow-up fails
+                                let _ = resp_tx
+                                    .send(OrchestratorMessage::Done {
+                                        full_response: format!("{}
+
+{}", parsed.text, tool_output),
+                                    })
+                                    .await;
+                                tracing::warn!("Follow-up generation failed: {}", e);
+                            }
+                        }
+                    } else {
+                        // No tool calls — standard response
+                        {
+                            let mut state = state.lock().await;
+                            state.conversation.push(ChatMessage {
+                                role: "assistant".into(),
+                                content: response.clone(),
+                            });
+                            let memory = new_memory(&response, MemorySource::Conversation);
+                            if let Err(e) = state.context.remember(memory).await {
+                                tracing::debug!("Context remember failed: {}", e);
+                            }
+                        }
+
+                        let _ = resp_tx
+                            .send(OrchestratorMessage::Done {
+                                full_response: response,
+                            })
+                            .await;
+                    }
                 }
                 Err(e) => {
                     tracing::error!("Ollama error: {}", e);
