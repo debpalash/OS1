@@ -14,24 +14,14 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
-description = "IndOS generative desktop shell — AI-driven TUI+GUI hybrid via Dioxus"
-
-[features]
-default = ["desktop"]
-desktop = ["dioxus/desktop"]        # GUI mode — Wayland native via Blitz/wgpu
-tui = ["dioxus/terminal"]           # TUI mode — SSH, TTY, headless
-web = ["dioxus/web"]                # Web mode — remote access via browser
+description = "IndOS generative desktop shell — Iced layer-shell surface on Niri"
 
 [dependencies]
-# UI Framework — single codebase renders as GUI, TUI, or Web
-dioxus = "0.7"
+# UI Framework — native Wayland layer-shell support via waycrate
+iced = { version = "0.13", features = ["tokio"] }
+iced_layershell = "0.18"
 
-# Wayland layer-shell integration (GUI mode only)
-smithay-client-toolkit = { version = "0.19", optional = true }
-wayland-client = { version = "0.31", optional = true }
-wayland-protocols = { version = "0.32", features = ["client", "staging", "unstable"], optional = true }
-
-# IPC with orchestrator
+# IPC with orchestrator (JSON over Unix socket)
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -48,4 +38,3 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uuid = { version = "1", features = ["v4"] }
 chrono = { version = "0.4", features = ["serde"] }
 anyhow = "1"
-

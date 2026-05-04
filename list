@@ -54,10 +54,23 @@ https://github.com/simstudioai/sim                 # Sim Studio - visual agentic
 
 # === DESKTOP INTEGRATION ===
 https://github.com/Alexays/Waybar                  # Waybar - customizable Wayland bar (Niri-compatible)
-https://github.com/DioxusLabs/dioxus               # Dioxus - Rust TUI+GUI+Web hybrid framework (Blitz native renderer, same code → terminal or desktop)
+https://github.com/iced-rs/iced                     # Iced - Rust GUI framework, wgpu renderer, Elm architecture (COSMIC DE uses this)
+https://github.com/waycrate/exwlshelleventloop      # iced_layershell - Wayland layer-shell bindings for iced (panels, overlays, docks)
+https://github.com/MalpenZibo/ashell                # ashell - Rust status bar for Niri (iced-rs, future Waybar replacement)
+
+# === SESSION & CRASH RECOVERY ===
+https://github.com/nyyManni/uwsm                   # UWSM - Universal Wayland Session Manager (systemd user session for compositors)
+https://github.com/Ferdi265/wl-restart              # wl-restart - Wayland socket handover (apps survive compositor crash/restart)
+
+# === NOTIFICATIONS ===
+https://github.com/ErikReider/SwayNotificationCenter # SwayNC - notification center, layer-shell, CSS-themeable, DnD, groups
+https://github.com/Toqozz/wired-notify              # Wired - Rust notification daemon, customizable layouts (M4 pure-Rust migration)
+
+# === OTA UPDATES ===
+https://github.com/rauc/rauc                        # RAUC - A/B partition OTA updates, crypto verification, D-Bus API (Arch package available)
 
 # === PROTOCOLS ===
 # MCP (Model Context Protocol) - tool exposure standard
 # AG-UI - agent↔frontend event transport
 # A2UI - declarative generative UI specification
-https://github.com/cloudflare/capnweb             # Cap'n Web - object-capability RPC (bidirectional, promise pipelining, capability security, 10kB)
+https://github.com/cloudflare/capnweb             # Cap'n Web - object-capability RPC (kept for future JS fragment ↔ orchestrator communication)
