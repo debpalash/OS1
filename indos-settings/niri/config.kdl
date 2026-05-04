@@ -3,9 +3,9 @@
 // Niri docs: https://github.com/YaLTeR/niri/wiki/Configuration
 
 // === AUTO-START ===
-spawn-at-startup "waybar" "-c" "/etc/indos/waybar/config.jsonc" "-s" "/etc/indos/waybar/style.css"
+spawn-at-startup "waybar"
+spawn-at-startup "swaync"
 spawn-at-startup "indos-shell"
-spawn-at-startup "hyprwhspr"    // system-wide dictation (if installed)
 
 // === INPUT ===
 input {

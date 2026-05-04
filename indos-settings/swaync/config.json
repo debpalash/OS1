@@ -1,0 +1,76 @@
+{
+    "$schema": "https://raw.githubusercontent.com/ErikReider/SwayNotificationCenter/main/src/configSchema/config.schema.json",
+    "positionX": "right",
+    "positionY": "top",
+    "layer": "overlay",
+    "control-center-layer": "top",
+    "layer-shell": true,
+    "cssPriority": "application",
+    "control-center-margin-top": 8,
+    "control-center-margin-right": 8,
+    "control-center-margin-bottom": 0,
+    "control-center-width": 420,
+    "control-center-height": 600,
+    "notification-2fa-action": true,
+    "notification-inline-replies": true,
+    "notification-icon-size": 48,
+    "notification-body-image-height": 160,
+    "notification-body-image-width": 200,
+    "timeout": 8,
+    "timeout-low": 4,
+    "timeout-critical": 0,
+    "fit-to-screen": true,
+    "relative-timestamps": true,
+    "notification-window-width": 380,
+    "hide-on-clear": false,
+    "hide-on-action": true,
+    "script-fail-notify": true,
+    "scripts": {
+        "indos-ai-response": {
+            "exec": "indos-shell --fragment notification",
+            "app-name": "IndOS",
+            "run-on": "receive"
+        }
+    },
+    "notification-visibility": {
+        "indos-system": {
+            "state": "transient",
+            "urgency": "Low",
+            "app-name": "IndOS"
+        }
+    },
+    "widgets": [
+        "title",
+        "dnd",
+        "notifications",
+        "mpris",
+        "volume",
+        "backlight",
+        "inhibitors"
+    ],
+    "widget-config": {
+        "title": {
+            "text": "IndOS Notifications",
+            "clear-all-button": true,
+            "button-text": "Clear"
+        },
+        "dnd": {
+            "text": "Do Not Disturb"
+        },
+        "mpris": {
+            "image-size": 96,
+            "image-radius": 8
+        },
+        "volume": {
+            "label": "󰕾"
+        },
+        "backlight": {
+            "label": "󰃟"
+        },
+        "inhibitors": {
+            "text": "Inhibitors",
+            "button-text": "Clear",
+            "clear-all-button": true
+        }
+    }
+}

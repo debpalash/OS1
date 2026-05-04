@@ -1,73 +1,67 @@
 #!/bin/bash
-# indos-waybar — Bridge between IndOS services and Waybar custom modules
-# Outputs JSON that Waybar's custom modules consume
-#
-# Usage: indos-waybar <command>
-# Commands: ai-status, voice-status, privacy-zone, model-status
+# indos-waybar — Waybar custom module data provider
+# Called by Waybar's custom modules to get AI/voice/privacy/model status
+# Output format: Waybar JSON ({"text":"...", "tooltip":"...", "class":"..."})
 
-set -euo pipefail
+ORCHESTRATOR_SOCK="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/indos/orchestrator.sock"
 
-ORCHESTRATOR_SOCKET="${INDOS_ORCHESTRATOR_SOCKET:-/run/indos/orchestrator.sock}"
+json_output() {
+    local text="$1" tooltip="$2" class="$3"
+    printf '{"text":"%s","tooltip":"%s","class":"%s"}\n' "$text" "$tooltip" "$class"
+}
 
-case "${1:-help}" in
-
+case "$1" in
     ai-status)
-        # Check if orchestrator is running and what it's doing
-        if [ -S "$ORCHESTRATOR_SOCKET" ]; then
-            # TODO: Query orchestrator for actual state
-            # For now, report based on process state
-            if pgrep -x indos-orchestrator > /dev/null 2>&1; then
-                echo '{"text": "ready", "class": "idle", "tooltip": "IndOS ready — click to open shell"}'
+        # Check if orchestrator is running
+        if [ -S "$ORCHESTRATOR_SOCK" ]; then
+            # Query status via socat
+            if command -v socat &>/dev/null; then
+                RESP=$(echo '{"type":"status"}' | socat - UNIX-CONNECT:"$ORCHESTRATOR_SOCK" 2>/dev/null | head -1)
+                if echo "$RESP" | grep -q '"ollama_connected":true'; then
+                    MODEL=$(echo "$RESP" | grep -o '"model":"[^"]*"' | cut -d'"' -f4)
+                    json_output "ready" "Model: $MODEL" "idle"
+                else
+                    json_output "no model" "Ollama disconnected" "error"
+                fi
             else
-                echo '{"text": "starting", "class": "thinking", "tooltip": "Orchestrator starting..."}'
+                json_output "ready" "Orchestrator running" "idle"
             fi
         else
-            echo '{"text": "offline", "class": "error", "tooltip": "Orchestrator not running"}'
+            json_output "offline" "Orchestrator not running" "error"
         fi
         ;;
 
     voice-status)
-        # Check voice pipeline state
-        if pgrep -f "indos-voice" > /dev/null 2>&1; then
-            # TODO: Query voice pipeline for actual state (listening/speaking/processing)
-            echo '{"text": "on", "class": "listening", "tooltip": "Voice active — click to toggle"}'
+        # Check if voice pipeline is running
+        if pgrep -x "indos-voice" &>/dev/null; then
+            json_output "" "Voice active" "listening"
         else
-            echo '{"text": "off", "class": "off", "tooltip": "Voice off — click to enable"}'
+            json_output "" "Voice off" "off"
         fi
         ;;
 
     privacy-zone)
-        # Show current privacy zone
-        # Green = all local, Yellow = API with filter, Red = blocked data present
-        if pgrep -x ollama > /dev/null 2>&1; then
-            # Check if any API keys are configured
-            if [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/indos/api-keys.toml" ]; then
-                echo '{"text": "filtered", "class": "yellow", "tooltip": "Privacy: API mode — PII filter active"}'
-            else
-                echo '{"text": "local", "class": "green", "tooltip": "Privacy: Local only — no data leaves device"}'
-            fi
-        else
-            echo '{"text": "no model", "class": "red", "tooltip": "Privacy: No inference available"}'
-        fi
+        # Default to green (all local)
+        json_output "" "All data stays local" "green"
         ;;
 
     model-status)
-        # Show active model
-        if pgrep -x ollama > /dev/null 2>&1; then
-            # Query Ollama for running model
-            RUNNING=$(curl -s http://localhost:11434/api/ps 2>/dev/null | grep -o '"name":"[^"]*"' | head -1 | cut -d'"' -f4)
-            if [ -n "$RUNNING" ]; then
-                echo "{\"text\": \"$RUNNING\", \"class\": \"active\", \"tooltip\": \"Model: $RUNNING (running)\"}"
+        # Query current model from orchestrator
+        if [ -S "$ORCHESTRATOR_SOCK" ] && command -v socat &>/dev/null; then
+            RESP=$(echo '{"type":"status"}' | socat - UNIX-CONNECT:"$ORCHESTRATOR_SOCK" 2>/dev/null | head -1)
+            MODEL=$(echo "$RESP" | grep -o '"model":"[^"]*"' | cut -d'"' -f4)
+            if [ -n "$MODEL" ]; then
+                json_output "$MODEL" "Active model: $MODEL" ""
             else
-                echo '{"text": "idle", "class": "idle", "tooltip": "Ollama running, no model loaded"}'
+                json_output "none" "No model loaded" ""
             fi
         else
-            echo '{"text": "offline", "class": "offline", "tooltip": "Ollama not running"}'
+            json_output "offline" "Orchestrator not running" ""
         fi
         ;;
 
-    help|*)
-        echo "Usage: indos-waybar <ai-status|voice-status|privacy-zone|model-status>"
+    *)
+        echo "Usage: indos-waybar {ai-status|voice-status|privacy-zone|model-status}" >&2
         exit 1
         ;;
 esac

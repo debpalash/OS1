@@ -24,6 +24,9 @@
 //! └──────────────────────────────────────────────┘
 //! ```
 
+mod fragments;
+
+use fragments::registry::{FragmentDescriptor, FragmentRegistry};
 use iced::widget::{column, container, row, scrollable, text, text_input, Column};
 use iced::{Element, Length, Task, Theme};
 use iced::window;
@@ -82,6 +85,8 @@ enum MessageRole {
     System,
     User,
     Assistant,
+    /// An inline fragment (rendered as a widget)
+    Fragment(FragmentDescriptor),
 }
 
 /// App messages
@@ -95,6 +100,9 @@ enum Message {
 
     /// Received a streaming chunk from orchestrator
     StreamChunk(String),
+
+    /// Received a fragment from orchestrator
+    FragmentReceived(FragmentDescriptor),
 
     /// Response complete
     StreamDone(String),
@@ -128,6 +136,9 @@ struct IndOSShell {
 
     /// Socket path
     socket_path: PathBuf,
+
+    /// Fragment registry (Tier 1 native components)
+    fragment_registry: FragmentRegistry,
 }
 
 impl IndOSShell {
@@ -146,6 +157,7 @@ impl IndOSShell {
             is_generating: false,
             connected: false,
             socket_path,
+            fragment_registry: FragmentRegistry::new(),
         }
     }
 }
@@ -185,6 +197,14 @@ fn update(shell: &mut IndOSShell, message: Message) -> Task<Message> {
 
             Message::StreamChunk(chunk) => {
                 shell.streaming_buffer.push_str(&chunk);
+                Task::none()
+            }
+
+            Message::FragmentReceived(descriptor) => {
+                shell.messages.push(ConversationMessage {
+                    role: MessageRole::Fragment(descriptor),
+                    content: String::new(),
+                });
                 Task::none()
             }
 
@@ -229,16 +249,25 @@ fn view(shell: &IndOSShell, _window: window::Id) -> Element<Message> {
             .messages
             .iter()
             .fold(Column::new().spacing(8), |col, msg| {
-                let (prefix, style_color) = match msg.role {
-                    MessageRole::System => ("◆ ", iced::Color::from_rgb(0.5, 0.5, 0.6)),
-                    MessageRole::User => ("→ ", iced::Color::from_rgb(0.4, 0.8, 1.0)),
-                    MessageRole::Assistant => ("◇ ", iced::Color::from_rgb(0.6, 1.0, 0.6)),
-                };
-                col.push(
-                    text(format!("{}{}", prefix, msg.content))
-                        .size(16)
-                        .color(style_color),
-                )
+                match &msg.role {
+                    MessageRole::Fragment(descriptor) => {
+                        // Render the fragment through the registry
+                        col.push(shell.fragment_registry.render::<Message>(descriptor))
+                    }
+                    role => {
+                        let (prefix, style_color) = match role {
+                            MessageRole::System => ("◆ ", iced::Color::from_rgb(0.5, 0.5, 0.6)),
+                            MessageRole::User => ("→ ", iced::Color::from_rgb(0.4, 0.8, 1.0)),
+                            MessageRole::Assistant => ("◇ ", iced::Color::from_rgb(0.6, 1.0, 0.6)),
+                            _ => unreachable!(),
+                        };
+                        col.push(
+                            text(format!("{}{}", prefix, msg.content))
+                                .size(16)
+                                .color(style_color),
+                        )
+                    }
+                }
             });
 
         // Add streaming buffer if generating
