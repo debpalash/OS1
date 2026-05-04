@@ -1,73 +1,93 @@
-# IndOS ISO Package List
-# Base packages for the bootable generative desktop
+# IndOS ISO Package List (CachyOS Base)
+# Performance-optimized Arch Linux with CachyOS kernel + repos
+# Packages from cachyos/cachyos-v3 repos are x86-64-v3 compiled
 
-# === BASE SYSTEM ===
+# ═══ CachyOS BASE ═══
 base
-linux
+cachyos-keyring
+cachyos-mirrorlist
+cachyos-v3-mirrorlist
+cachyos-settings
+
+# ═══ KERNEL (CachyOS optimized) ═══
+linux-cachyos                    # BORE scheduler, x86-64-v3, performance tuned
+linux-cachyos-headers
 linux-firmware
+
+# ═══ BOOT ═══
 mkinitcpio
 mkinitcpio-archiso
-
-# === BOOT ===
 grub
 efibootmgr
 syslinux
 
-# === NETWORKING ===
+# ═══ NETWORKING ═══
 networkmanager
 iwd
 openssh
+curl
+wget
 
-# === DISPLAY ===
+# ═══ DISPLAY (GPU) ═══
 mesa
 vulkan-intel
 vulkan-radeon
 xdg-desktop-portal
 xdg-desktop-portal-gtk
 
-# === COMPOSITOR ===
+# ═══ COMPOSITOR ═══
 niri
 
-# === STATUS BAR + NOTIFICATIONS ===
+# ═══ BAR + NOTIFICATIONS ═══
 waybar
 swaynotificationcenter
 
-# === DISPLAY MANAGER ===
+# ═══ DISPLAY MANAGER ═══
 greetd
 greetd-tuigreet
 
-# === AUDIO ===
+# ═══ AUDIO ═══
 pipewire
 pipewire-pulse
 pipewire-alsa
 wireplumber
 
-# === TERMINAL ===
+# ═══ TERMINALS ═══
 foot
 alacritty
 
-# === SHELL ===
+# ═══ SHELL ═══
 zsh
 starship
 
-# === FONTS ===
+# ═══ FONTS ═══
 ttf-inter
 ttf-jetbrains-mono-nerd
 noto-fonts
 noto-fonts-emoji
 
-# === AI STACK ===
+# ═══ AI STACK ═══
 ollama
+
+# ═══ VOICE PIPELINE ═══
+python
 python-pip
 python-numpy
+# faster-whisper + piper installed via pip in customize script
 
-# === BUILD TOOLS (for development) ===
+# ═══ PERFORMANCE (CachyOS extras) ═══
+cachyos-rate-mirrors              # Fast mirror selection
+cachyos-ananicy-rules             # Auto process priority (AI workloads get priority)
+ananicy-cpp                       # Process scheduler (CachyOS optimized)
+zram-generator                    # Compressed swap (more RAM for models)
+
+# ═══ BUILD TOOLS ═══
 base-devel
 git
 rustup
 gcc
 
-# === UTILITIES ===
+# ═══ UTILITIES ═══
 htop
 btop
 fastfetch
@@ -75,6 +95,6 @@ man-db
 less
 nano
 vim
-wget
-curl
 unzip
+socat                             # IPC testing utility
+jq                                # JSON processing
