@@ -1,24 +1,14 @@
-[workspace]
-resolver = "2"
-
-[workspace.package]
+[package]
+name = "indos-shell"
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0"
 authors = ["IndOS Contributors"]
-repository = "https://github.com/IndOS/indos-shell"
-
-[package]
-name = "indos-shell"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-authors.workspace = true
 description = "IndOS generative desktop shell — Iced layer-shell surface on Niri"
 
 [dependencies]
 # UI Framework — native Wayland layer-shell support via waycrate
-iced = { version = "0.13", features = ["tokio"] }
+iced = { version = "0.14", features = ["tokio"] }
 iced_layershell = "0.18"
 
 # IPC with orchestrator (JSON over Unix socket)
@@ -38,3 +28,4 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uuid = { version = "1", features = ["v4"] }
 chrono = { version = "0.4", features = ["serde"] }
 anyhow = "1"
+libc = "0.2"

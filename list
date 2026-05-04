@@ -57,6 +57,8 @@ https://github.com/Alexays/Waybar                  # Waybar - customizable Wayla
 https://github.com/iced-rs/iced                     # Iced - Rust GUI framework, wgpu renderer, Elm architecture (COSMIC DE uses this)
 https://github.com/waycrate/exwlshelleventloop      # iced_layershell - Wayland layer-shell bindings for iced (panels, overlays, docks)
 https://github.com/MalpenZibo/ashell                # ashell - Rust status bar for Niri (iced-rs, future Waybar replacement)
+https://github.com/PerryTS/perry                    # Perry - TS→native compiler (LLVM, GTK4 on Linux). Fragment compilation target as it matures with IndOS
+https://github.com/oven-sh/bun                      # Bun - fast JS/TS runtime for OpenUI/Tambo fragment execution in webview
 
 # === SESSION & CRASH RECOVERY ===
 https://github.com/nyyManni/uwsm                   # UWSM - Universal Wayland Session Manager (systemd user session for compositors)
