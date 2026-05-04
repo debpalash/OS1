@@ -1,94 +1,136 @@
-# === OS REFERENCES ===
-https://github.com/orgs/archlinux/repositories
-https://github.com/orgs/CachyOS/repositories
-https://github.com/basecamp/omarchy
-https://github.com/orgs/AerynOS/repositories
-https://gitlab.redox-os.org/redox-os
-https://github.com/orgs/NixOS/repositories
-https://github.com/orgs/AsahiLinux/repositories
+# IndOS Technology Stack
+# Curated tools, frameworks, and references for the generative desktop
+# Format: URL # Name - description (milestone target)
 
-# === COMPOSITOR (LOCKED: Niri) ===
-https://github.com/YaLTeR/niri                    # Niri - Rust + Smithay scrollable tiling compositor
-https://github.com/Smithay/smithay                 # Smithay - Rust Wayland compositor library
+# ═══════════════════════════════════════════════════════════════════
+# OS REFERENCES
+# ═══════════════════════════════════════════════════════════════════
+https://github.com/orgs/archlinux/repositories       # Arch Linux - base distro (rolling release, pacman)
+https://github.com/orgs/CachyOS/repositories         # CachyOS - performance-tuned Arch (kernel optimizations, installer)
+https://github.com/basecamp/omarchy                   # Omarchy - opinionated Arch desktop (reference for session setup)
+https://github.com/orgs/AerynOS/repositories          # AerynOS - modern Linux distro (immutable)
+https://gitlab.redox-os.org/redox-os                   # Redox OS - Rust-native microkernel OS (research reference)
+https://github.com/orgs/NixOS/repositories             # NixOS - declarative OS (reproducible builds reference)
+https://github.com/orgs/AsahiLinux/repositories        # Asahi Linux - ARM Linux (Apple Silicon, hardware reference)
 
-# === GENERATIVE UI ===
-https://github.com/CopilotKit/CopilotKit          # AG-UI protocol, React generative UI framework
-https://github.com/tambo-ai/tambo                  # Tambo - generative + interactable components, Zod schemas
-https://github.com/wandb/openui                    # OpenUI - natural language → HTML/CSS, live preview
-https://a2ui.org                                   # A2UI spec (Google) - declarative UI from agents
-https://ag-ui.com                                  # AG-UI protocol (CopilotKit) - agent↔frontend transport
+# ═══════════════════════════════════════════════════════════════════
+# COMPOSITOR (LOCKED: Niri)
+# ═══════════════════════════════════════════════════════════════════
+https://github.com/YaLTeR/niri                        # Niri - Rust + Smithay scrollable tiling compositor
+https://github.com/Smithay/smithay                     # Smithay - Rust Wayland compositor library
 
-# === PRIVACY & BROWSER ===
-https://github.com/openai/openai-privacy-filter    # OpenAI Privacy Filter - local PII redaction (Apache 2.0)
-https://github.com/zhom/donutbrowser               # Donut Browser - anti-detect, isolated profiles, MCP server, per-profile proxy/VPN (AGPL-3.0)
+# ═══════════════════════════════════════════════════════════════════
+# GENERATIVE UI FRAMEWORKS
+# ═══════════════════════════════════════════════════════════════════
+https://github.com/CopilotKit/CopilotKit              # AG-UI protocol, React generative UI framework
+https://github.com/tambo-ai/tambo                      # Tambo - generative + interactable components, Zod schemas
+https://github.com/wandb/openui                        # OpenUI - natural language → HTML/CSS, live preview
+https://a2ui.org                                       # A2UI spec (Google) - declarative UI from agents
+https://ag-ui.com                                      # AG-UI protocol (CopilotKit) - agent↔frontend transport
 
-# === VISION MODELS ===
-https://github.com/QwenLM/Qwen2.5-VL              # Qwen2.5-VL - desktop screenshot understanding, GUI automation
-https://qwen.ai                                    # Qwen model family
+# ═══════════════════════════════════════════════════════════════════
+# SHELL & DESKTOP INTEGRATION
+# ═══════════════════════════════════════════════════════════════════
+https://github.com/iced-rs/iced                        # Iced - Rust GUI framework, wgpu renderer, Elm architecture (COSMIC DE uses this)
+https://github.com/waycrate/exwlshelleventloop         # iced_layershell - Wayland layer-shell bindings for iced (panels, overlays, docks)
+https://github.com/Alexays/Waybar                      # Waybar - customizable Wayland bar (Niri-compatible)
+https://github.com/MalpenZibo/ashell                   # ashell - Rust status bar for Niri (iced-rs, future Waybar replacement)
+https://github.com/PerryTS/perry                       # Perry - TS→native compiler (LLVM, GTK4 on Linux). Fragment compilation target
+https://github.com/oven-sh/bun                         # Bun - fast JS/TS runtime for OpenUI/Tambo fragment execution in webview
 
-# === VOICE PIPELINE ===
-https://github.com/livekit/agents                  # LiveKit Agent Framework - realtime voice/video AI
-https://github.com/SYSTRAN/faster-whisper           # Faster-Whisper - local STT (GPU-accelerated)
-https://github.com/rhasspy/piper                   # Piper TTS - local text-to-speech (<100ms)
-https://github.com/goodroot/hyprwhspr              # hyprwhspr - system-wide dictation (push-to-talk → types into active buffer, Waybar integration)
-https://github.com/GetStream/Vision-Agents          # Vision Agents - realtime voice+vision AI agents, YOLO/Gemini, <30ms latency (Apache-2.0, 7.7k⭐)
+# ═══════════════════════════════════════════════════════════════════
+# PRIVACY & BROWSER
+# ═══════════════════════════════════════════════════════════════════
+https://github.com/openai/openai-privacy-filter        # OpenAI Privacy Filter - local PII redaction (Apache 2.0)
+https://github.com/zhom/donutbrowser                   # Donut Browser - anti-detect, isolated profiles, MCP server (AGPL-3.0)
 
-# === CONTEXT MEMORY ===
-https://github.com/lancedb/lancedb                 # LanceDB - embedded vector DB ("SQLite for vectors")
-https://github.com/nomic-ai/nomic                  # nomic-embed-text - local embedding model
-https://github.com/andrewyng/context-hub            # Context Hub - curated versioned API docs for agents, self-improving annotations (Andrew Ng, 13.2k⭐)
+# ═══════════════════════════════════════════════════════════════════
+# VISION & COMPUTER USE MODELS
+# ═══════════════════════════════════════════════════════════════════
+https://github.com/QwenLM/Qwen2.5-VL                  # Qwen2.5-VL - desktop screenshot understanding, GUI automation
+https://qwen.ai                                        # Qwen model family (Alibaba)
+https://github.com/bytedance/UI-TARS-desktop           # UI-TARS - ByteDance vision GUI agent, 2B/7B local, cross-platform (M4)
+https://github.com/microsoft/fara                      # Fara-7B - Microsoft 7B computer-use model, screenshot→action, local/Ollama (M4)
 
-# === SCREEN CONTEXT ===
-https://github.com/mediar-ai/screenpipe            # Screenpipe - 24/7 screen+audio capture, local OCR, REST API
+# ═══════════════════════════════════════════════════════════════════
+# VOICE PIPELINE
+# ═══════════════════════════════════════════════════════════════════
+https://github.com/livekit/agents                      # LiveKit Agent Framework - realtime voice/video AI
+https://github.com/SYSTRAN/faster-whisper              # Faster-Whisper - local STT (GPU-accelerated)
+https://github.com/rhasspy/piper                       # Piper TTS - local text-to-speech (<100ms)
+https://github.com/goodroot/hyprwhspr                  # hyprwhspr - system-wide dictation (push-to-talk, Waybar integration)
+https://github.com/GetStream/Vision-Agents             # Vision Agents - realtime voice+vision AI agents, <30ms latency (Apache-2.0)
 
-# === MODEL MANAGEMENT ===
-https://github.com/AlexsJones/llmfit               # llmfit - hardware model fitness scanner (RAM/CPU/GPU → model recommendations, 25k stars)
+# ═══════════════════════════════════════════════════════════════════
+# CONTEXT & MEMORY
+# ═══════════════════════════════════════════════════════════════════
+https://github.com/lancedb/lancedb                     # LanceDB - embedded vector DB ("SQLite for vectors")
+https://github.com/nomic-ai/nomic                      # nomic-embed-text - local embedding model
+https://github.com/mem0ai/mem0                         # Mem0 - persistent AI memory layer, self-hostable (M2)
+https://github.com/andrewyng/context-hub               # Context Hub - curated versioned API docs for agents (Andrew Ng, 13.2k⭐)
 
-# === AGENT HARNESSES ===
-https://github.com/opencode-ai/opencode            # OpenCode - open-source, model-agnostic coding agent
-https://github.com/anthropics/claude-code           # Claude Code - deep reasoning terminal agent
-https://github.com/openai/codex                    # Codex CLI - speed-optimized parallel agent
-https://github.com/paul-gauthier/aider             # Aider - git-native pair programming
-https://github.com/charmbracelet/crush             # Crush - beautiful TUI coding agent
-https://github.com/simstudioai/sim                 # Sim Studio - visual agentic workflow builder, 1000+ integrations, self-hostable (Apache-2.0)
-https://github.com/browser-use/browser-use          # Browser Use - AI agent browser automation (click/type/navigate/extract). M3+
-https://github.com/vercel-labs/agent-browser         # Agent Browser - headless browser built for AI agents. Pairs with browser-use
-https://github.com/firecrawl/firecrawl              # Firecrawl - web→markdown pipeline, Rust SDK, MCP server. Web context for orchestrator (M2)
-https://github.com/Skyvern-AI/skyvern               # Skyvern - visual browser RPA, Ollama-compatible, CAPTCHA/2FA, self-host (M3)
-https://github.com/lightpanda-io/browser             # Lightpanda - Zig headless browser, 11x faster than Playwright, 2MB binary (M3)
-https://github.com/mem0ai/mem0                       # Mem0 - persistent AI memory layer, self-hostable. Context engine augmentation (M2)
-https://github.com/bytedance/UI-TARS-desktop         # UI-TARS - vision model for GUI automation, 2B/7B local, cross-platform (M4)
-https://github.com/microsoft/fara                    # Fara-7B - Microsoft 7B computer-use model, screenshot→action, local/Ollama (M4)
-https://github.com/CelestoAI/SmolVM                  # SmolVM - Firecracker microVM sandbox for agents, <500ms boot, snapshots (M3)
-https://github.com/mnfst/manifest                    # Manifest - smart model routing, auto-selects cheapest capable model (M2)
-https://github.com/web-infra-dev/midscene            # Midscene - vision-AI web automation + self-testing, MCP support (M3)
-https://github.com/maplibre/maplibre-gl-js            # MapLibre GL JS - open-source vector tile maps, Tier 2/3 fragment (M3)
+# ═══════════════════════════════════════════════════════════════════
+# SCREEN CONTEXT
+# ═══════════════════════════════════════════════════════════════════
+https://github.com/mediar-ai/screenpipe               # Screenpipe - 24/7 screen+audio capture, local OCR, REST API
 
-# === DESKTOP INTEGRATION ===
-https://github.com/Alexays/Waybar                  # Waybar - customizable Wayland bar (Niri-compatible)
-https://github.com/iced-rs/iced                     # Iced - Rust GUI framework, wgpu renderer, Elm architecture (COSMIC DE uses this)
-https://github.com/waycrate/exwlshelleventloop      # iced_layershell - Wayland layer-shell bindings for iced (panels, overlays, docks)
-https://github.com/MalpenZibo/ashell                # ashell - Rust status bar for Niri (iced-rs, future Waybar replacement)
-https://github.com/PerryTS/perry                    # Perry - TS→native compiler (LLVM, GTK4 on Linux). Fragment compilation target as it matures with IndOS
-https://github.com/oven-sh/bun                      # Bun - fast JS/TS runtime for OpenUI/Tambo fragment execution in webview
+# ═══════════════════════════════════════════════════════════════════
+# MODEL MANAGEMENT & ROUTING
+# ═══════════════════════════════════════════════════════════════════
+https://github.com/AlexsJones/llmfit                   # llmfit - hardware model fitness scanner (RAM/CPU/GPU → model recommendations)
+https://github.com/mnfst/manifest                      # Manifest - smart model routing, auto-selects cheapest capable model (M2)
 
-# === SESSION & CRASH RECOVERY ===
-https://github.com/nyyManni/uwsm                   # UWSM - Universal Wayland Session Manager (systemd user session for compositors)
-https://github.com/Ferdi265/wl-restart              # wl-restart - Wayland socket handover (apps survive compositor crash/restart)
+# ═══════════════════════════════════════════════════════════════════
+# AGENT HARNESSES (Coding)
+# ═══════════════════════════════════════════════════════════════════
+https://github.com/opencode-ai/opencode                # OpenCode - open-source, model-agnostic coding agent
+https://github.com/anthropics/claude-code               # Claude Code - deep reasoning terminal agent
+https://github.com/openai/codex                        # Codex CLI - speed-optimized parallel agent
+https://github.com/paul-gauthier/aider                 # Aider - git-native pair programming
+https://github.com/charmbracelet/crush                 # Crush - beautiful TUI coding agent
+https://github.com/simstudioai/sim                     # Sim Studio - visual agentic workflow builder, 1000+ integrations (Apache-2.0)
 
-# === NOTIFICATIONS ===
-https://github.com/ErikReider/SwayNotificationCenter # SwayNC - notification center, layer-shell, CSS-themeable, DnD, groups
-https://github.com/Toqozz/wired-notify              # Wired - Rust notification daemon, customizable layouts (M4 pure-Rust migration)
+# ═══════════════════════════════════════════════════════════════════
+# BROWSER AUTOMATION & WEB AGENTS
+# ═══════════════════════════════════════════════════════════════════
+https://github.com/browser-use/browser-use             # Browser Use - AI browser automation, Ollama-compatible, 92k⭐ (M3)
+https://github.com/vercel-labs/agent-browser            # Agent Browser - headless browser built for AI agents (M3)
+https://github.com/firecrawl/firecrawl                 # Firecrawl - web→markdown pipeline, Rust SDK, MCP server (M2)
+https://github.com/Skyvern-AI/skyvern                  # Skyvern - visual browser RPA, CAPTCHA/2FA, self-hostable (M3)
+https://github.com/lightpanda-io/browser               # Lightpanda - Zig headless browser, 11x faster, 2MB binary (M3)
+https://github.com/web-infra-dev/midscene              # Midscene - ByteDance vision-AI web automation + testing, MCP (M3)
 
-# === OTA UPDATES ===
-https://github.com/rauc/rauc                        # RAUC - A/B partition OTA updates, crypto verification, D-Bus API (Arch package available)
+# ═══════════════════════════════════════════════════════════════════
+# AGENT SECURITY & SANDBOXING
+# ═══════════════════════════════════════════════════════════════════
+https://github.com/CelestoAI/SmolVM                   # SmolVM - Firecracker microVM sandbox for agents, <500ms boot, snapshots (M3)
 
-# === PROTOCOLS ===
-# MCP (Model Context Protocol) - tool exposure standard
-# AG-UI - agent↔frontend event transport
-# A2UI - declarative generative UI specification
-https://github.com/cloudflare/capnweb             # Cap'n Web - object-capability RPC (kept for future JS fragment ↔ 
+# ═══════════════════════════════════════════════════════════════════
+# SESSION & CRASH RECOVERY
+# ═══════════════════════════════════════════════════════════════════
+https://github.com/nyyManni/uwsm                      # UWSM - Universal Wayland Session Manager (systemd user session)
+https://github.com/Ferdi265/wl-restart                 # wl-restart - Wayland socket handover (apps survive compositor crash)
 
+# ═══════════════════════════════════════════════════════════════════
+# NOTIFICATIONS
+# ═══════════════════════════════════════════════════════════════════
+https://github.com/ErikReider/SwayNotificationCenter   # SwayNC - notification center, layer-shell, CSS-themeable, DnD
+https://github.com/Toqozz/wired-notify                # Wired - Rust notification daemon (M4 pure-Rust migration)
 
-#MEGA LIST TOPIC
-https://github.com/topics/browser-use
+# ═══════════════════════════════════════════════════════════════════
+# OTA UPDATES
+# ═══════════════════════════════════════════════════════════════════
+https://github.com/rauc/rauc                           # RAUC - A/B partition OTA updates, crypto verification, D-Bus API
+
+# ═══════════════════════════════════════════════════════════════════
+# MAP & SPATIAL FRAGMENTS
+# ═══════════════════════════════════════════════════════════════════
+https://github.com/maplibre/maplibre-gl-js             # MapLibre GL JS - open-source vector tile maps, Tier 2/3 fragment (M3)
+
+# ═══════════════════════════════════════════════════════════════════
+# PROTOCOLS & STANDARDS
+# ═══════════════════════════════════════════════════════════════════
+# MCP  - Model Context Protocol (tool exposure standard)
+# AG-UI - agent↔frontend event transport (CopilotKit)
+# A2UI  - declarative generative UI specification (Google)
+https://github.com/cloudflare/capnweb                  # Cap'n Web - object-capability RPC (future fragment↔sandbox IPC)
