@@ -1,0 +1,51 @@
+[workspace]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0"
+authors = ["IndOS Contributors"]
+repository = "https://github.com/IndOS/indos-shell"
+
+[package]
+name = "indos-shell"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "IndOS generative desktop shell — AI-driven TUI+GUI hybrid via Dioxus"
+
+[features]
+default = ["desktop"]
+desktop = ["dioxus/desktop"]        # GUI mode — Wayland native via Blitz/wgpu
+tui = ["dioxus/terminal"]           # TUI mode — SSH, TTY, headless
+web = ["dioxus/web"]                # Web mode — remote access via browser
+
+[dependencies]
+# UI Framework — single codebase renders as GUI, TUI, or Web
+dioxus = "0.7"
+
+# Wayland layer-shell integration (GUI mode only)
+smithay-client-toolkit = { version = "0.19", optional = true }
+wayland-client = { version = "0.31", optional = true }
+wayland-protocols = { version = "0.32", features = ["client", "staging", "unstable"], optional = true }
+
+# IPC with orchestrator
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Config
+toml = "0.8"
+dirs = "5"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Utils
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+anyhow = "1"
+

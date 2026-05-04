@@ -1,0 +1,215 @@
+// IndOS Niri configuration
+// Optimized for generative desktop — IndOS shell as primary surface
+// Niri docs: https://github.com/YaLTeR/niri/wiki/Configuration
+
+// === AUTO-START ===
+spawn-at-startup "waybar" "-c" "/etc/indos/waybar/config.jsonc" "-s" "/etc/indos/waybar/style.css"
+spawn-at-startup "indos-shell"
+spawn-at-startup "hyprwhspr"    // system-wide dictation (if installed)
+
+// === INPUT ===
+input {
+    keyboard {
+        xkb {
+            // Users can override in ~/.config/niri/config.kdl
+        }
+        // Fast repeat for power users
+        repeat-delay 300
+        repeat-rate 50
+    }
+
+    touchpad {
+        tap
+        natural-scroll
+        dwt  // disable while typing
+    }
+
+    mouse {
+        // natural-scroll
+    }
+
+    // Focus follows mouse — important for fragment interaction
+    focus-follows-mouse max-scroll-amount="0%"
+}
+
+// === OUTPUT / DISPLAY ===
+// Auto-detected. Users can override for multi-monitor setups.
+
+// === LAYOUT ===
+layout {
+    gaps 8
+
+    // Center the focused column for the generative shell aesthetic
+    center-focused-column "on-overflow"
+
+    // Default column width — fragments use this
+    default-column-width { proportion 0.5; }
+
+    // Borders
+    focus-ring {
+        width 2
+        active-color "#7aa2f7"    // IndOS accent blue
+        inactive-color "#414868"
+    }
+
+    border {
+        off
+    }
+
+    // Preset column widths (cycle with Mod+R)
+    preset-column-widths {
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+        proportion 1.0
+    }
+}
+
+// === ANIMATIONS ===
+animations {
+    // Smooth but fast — don't waste time on transitions
+    // The AI should feel instant
+
+    window-open {
+        duration-ms 200
+        curve "ease-out-expo"
+    }
+
+    window-close {
+        duration-ms 150
+        curve "ease-out-quad"
+    }
+
+    workspace-switch {
+        duration-ms 250
+        curve "ease-out-cubic"
+    }
+
+    // Column movement
+    horizontal-view-movement {
+        duration-ms 200
+        curve "ease-out-cubic"
+    }
+}
+
+// === WINDOW RULES ===
+// IndOS shell runs as a layer-shell surface (not managed here)
+// These rules handle traditional apps launched via IndOS
+
+window-rule {
+    // Firefox gets generous space
+    match app-id="firefox"
+    default-column-width { proportion 0.75; }
+}
+
+window-rule {
+    // Terminals start at half width
+    match app-id="Alacritty"
+    match app-id="kitty"
+    match app-id="foot"
+    default-column-width { proportion 0.5; }
+}
+
+window-rule {
+    // Code editors get full width
+    match app-id="code"
+    match app-id="Code"
+    match app-id="zed"
+    default-column-width { proportion 1.0; }
+}
+
+// === KEYBINDS ===
+binds {
+    // Mod = Super key
+    // IndOS core binds
+
+    // Toggle IndOS shell overlay (the primary interaction)
+    Mod+Space { spawn "indos-shell" "--toggle"; }
+
+    // Launch traditional apps via IndOS (speak or type)
+    // But also keep classic launcher as fallback
+    Mod+D { spawn "fuzzel"; }
+
+    // Window navigation (scroll through Niri's infinite canvas)
+    Mod+H     { focus-column-left; }
+    Mod+L     { focus-column-right; }
+    Mod+J     { focus-window-down; }
+    Mod+K     { focus-window-up; }
+    Mod+Left  { focus-column-left; }
+    Mod+Right { focus-column-right; }
+    Mod+Down  { focus-window-down; }
+    Mod+Up    { focus-window-up; }
+
+    // Move windows
+    Mod+Shift+H     { move-column-left; }
+    Mod+Shift+L     { move-column-right; }
+    Mod+Shift+J     { move-window-down; }
+    Mod+Shift+K     { move-window-up; }
+    Mod+Shift+Left  { move-column-left; }
+    Mod+Shift+Right { move-column-right; }
+
+    // Resize columns
+    Mod+R { switch-preset-column-width; }
+    Mod+Minus { set-column-width "-10%"; }
+    Mod+Equal { set-column-width "+10%"; }
+    Mod+F { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
+
+    // Workspaces
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+Shift+1 { move-column-to-workspace 1; }
+    Mod+Shift+2 { move-column-to-workspace 2; }
+    Mod+Shift+3 { move-column-to-workspace 3; }
+    Mod+Shift+4 { move-column-to-workspace 4; }
+
+    // Close window
+    Mod+Q { close-window; }
+
+    // Quick terminal (also available as IndOS fragment)
+    Mod+Return { spawn "alacritty"; }
+
+    // Screenshot
+    Print { screenshot; }
+    Mod+Print { screenshot-screen; }
+
+    // Lock screen
+    Mod+Escape { spawn "swaylock"; }
+
+    // Exit Niri (logout)
+    Mod+Shift+E { quit; }
+
+    // Audio (PipeWire)
+    XF86AudioRaiseVolume { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%+"; }
+    XF86AudioLowerVolume { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
+    XF86AudioMute { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
+
+    // Voice toggle (IndOS voice pipeline)
+    Mod+V { spawn "indos-voice" "--toggle"; }
+}
+
+// === ENVIRONMENT ===
+environment {
+    // Wayland-native apps
+    QT_QPA_PLATFORM "wayland"
+    GDK_BACKEND "wayland"
+    MOZ_ENABLE_WAYLAND "1"
+
+    // IndOS orchestrator socket
+    INDOS_ORCHESTRATOR_SOCKET "/run/indos/orchestrator.sock"
+}
+
+// === CURSOR ===
+cursor {
+    theme "Adwaita"
+    size 24
+}
+
+// === MISC ===
+prefer-no-csd
+hotkey-overlay {
+    skip-at-startup
+}
+screenshot-path "~/Pictures/Screenshots/%Y-%m-%d_%H-%M-%S.png"

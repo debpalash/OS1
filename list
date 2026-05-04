@@ -1,0 +1,63 @@
+# === OS REFERENCES ===
+https://github.com/orgs/archlinux/repositories
+https://github.com/orgs/CachyOS/repositories
+https://github.com/basecamp/omarchy
+https://github.com/orgs/AerynOS/repositories
+https://gitlab.redox-os.org/redox-os
+https://github.com/orgs/NixOS/repositories
+https://github.com/orgs/AsahiLinux/repositories
+
+# === COMPOSITOR (LOCKED: Niri) ===
+https://github.com/YaLTeR/niri                    # Niri - Rust + Smithay scrollable tiling compositor
+https://github.com/Smithay/smithay                 # Smithay - Rust Wayland compositor library
+
+# === GENERATIVE UI ===
+https://github.com/CopilotKit/CopilotKit          # AG-UI protocol, React generative UI framework
+https://github.com/tambo-ai/tambo                  # Tambo - generative + interactable components, Zod schemas
+https://github.com/wandb/openui                    # OpenUI - natural language → HTML/CSS, live preview
+https://a2ui.org                                   # A2UI spec (Google) - declarative UI from agents
+https://ag-ui.com                                  # AG-UI protocol (CopilotKit) - agent↔frontend transport
+
+# === PRIVACY & BROWSER ===
+https://github.com/openai/openai-privacy-filter    # OpenAI Privacy Filter - local PII redaction (Apache 2.0)
+https://github.com/zhom/donutbrowser               # Donut Browser - anti-detect, isolated profiles, MCP server, per-profile proxy/VPN (AGPL-3.0)
+
+# === VISION MODELS ===
+https://github.com/QwenLM/Qwen2.5-VL              # Qwen2.5-VL - desktop screenshot understanding, GUI automation
+https://qwen.ai                                    # Qwen model family
+
+# === VOICE PIPELINE ===
+https://github.com/livekit/agents                  # LiveKit Agent Framework - realtime voice/video AI
+https://github.com/SYSTRAN/faster-whisper           # Faster-Whisper - local STT (GPU-accelerated)
+https://github.com/rhasspy/piper                   # Piper TTS - local text-to-speech (<100ms)
+https://github.com/goodroot/hyprwhspr              # hyprwhspr - system-wide dictation (push-to-talk → types into active buffer, Waybar integration)
+https://github.com/GetStream/Vision-Agents          # Vision Agents - realtime voice+vision AI agents, YOLO/Gemini, <30ms latency (Apache-2.0, 7.7k⭐)
+
+# === CONTEXT MEMORY ===
+https://github.com/lancedb/lancedb                 # LanceDB - embedded vector DB ("SQLite for vectors")
+https://github.com/nomic-ai/nomic                  # nomic-embed-text - local embedding model
+https://github.com/andrewyng/context-hub            # Context Hub - curated versioned API docs for agents, self-improving annotations (Andrew Ng, 13.2k⭐)
+
+# === SCREEN CONTEXT ===
+https://github.com/mediar-ai/screenpipe            # Screenpipe - 24/7 screen+audio capture, local OCR, REST API
+
+# === MODEL MANAGEMENT ===
+https://github.com/AlexsJones/llmfit               # llmfit - hardware model fitness scanner (RAM/CPU/GPU → model recommendations, 25k stars)
+
+# === AGENT HARNESSES ===
+https://github.com/opencode-ai/opencode            # OpenCode - open-source, model-agnostic coding agent
+https://github.com/anthropics/claude-code           # Claude Code - deep reasoning terminal agent
+https://github.com/openai/codex                    # Codex CLI - speed-optimized parallel agent
+https://github.com/paul-gauthier/aider             # Aider - git-native pair programming
+https://github.com/charmbracelet/crush             # Crush - beautiful TUI coding agent
+https://github.com/simstudioai/sim                 # Sim Studio - visual agentic workflow builder, 1000+ integrations, self-hostable (Apache-2.0)
+
+# === DESKTOP INTEGRATION ===
+https://github.com/Alexays/Waybar                  # Waybar - customizable Wayland bar (Niri-compatible)
+https://github.com/DioxusLabs/dioxus               # Dioxus - Rust TUI+GUI+Web hybrid framework (Blitz native renderer, same code → terminal or desktop)
+
+# === PROTOCOLS ===
+# MCP (Model Context Protocol) - tool exposure standard
+# AG-UI - agent↔frontend event transport
+# A2UI - declarative generative UI specification
+https://github.com/cloudflare/capnweb             # Cap'n Web - object-capability RPC (bidirectional, promise pipelining, capability security, 10kB)

@@ -1,0 +1,17 @@
+[package]
+name = "indos-privacy"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0"
+authors = ["IndOS Contributors"]
+description = "IndOS privacy layer — local PII redaction using OpenAI Privacy Filter before API calls"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.12", features = ["json"] }
+regex = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow = "1"

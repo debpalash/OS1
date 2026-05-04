@@ -1,0 +1,41 @@
+# Build artifacts
+target/
+dist/
+*.o
+*.so
+*.dylib
+
+# Node
+node_modules/
+package-lock.json
+.npm/
+
+# Rust
+Cargo.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IndOS runtime
+/run/indos/
+*.sock
+
+# Secrets (never commit)
+.env
+*.key
+*.pem
+api_keys.toml
+
+# ISO build output
+*.iso
+*.img
+work/
+out/

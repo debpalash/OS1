@@ -1,0 +1,23 @@
+[Unit]
+Description=IndOS Orchestrator — AI intent routing and session management
+After=network.target
+Wants=ollama.service
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/indos-orchestrator
+Restart=on-failure
+RestartSec=5
+
+# Security hardening
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/run/indos
+ReadWritePaths=%h/.local/share/indos
+
+# Socket
+RuntimeDirectory=indos
+RuntimeDirectoryMode=0755
+
+[Install]
+WantedBy=default.target

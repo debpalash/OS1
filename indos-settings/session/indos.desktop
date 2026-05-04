@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=IndOS
+Comment=AI-first generative desktop on Niri compositor
+Exec=/usr/bin/indos-session
+Type=Application
+DesktopNames=IndOS
