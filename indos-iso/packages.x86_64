@@ -10,8 +10,10 @@ cachyos-v3-mirrorlist
 cachyos-settings
 
 # ═══ KERNEL (CachyOS optimized) ═══
-linux-cachyos                    # BORE scheduler, x86-64-v3, performance tuned
+linux-cachyos                    # Linux 7.x, BORE scheduler, x86-64-v3 (default)
 linux-cachyos-headers
+linux-cachyos-lts                # LTS fallback kernel (boot menu option)
+linux-cachyos-lts-headers
 linux-firmware
 
 # ═══ BOOT ═══
