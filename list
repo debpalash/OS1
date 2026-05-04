@@ -58,6 +58,11 @@ https://github.com/Skyvern-AI/skyvern               # Skyvern - visual browser R
 https://github.com/lightpanda-io/browser             # Lightpanda - Zig headless browser, 11x faster than Playwright, 2MB binary (M3)
 https://github.com/mem0ai/mem0                       # Mem0 - persistent AI memory layer, self-hostable. Context engine augmentation (M2)
 https://github.com/bytedance/UI-TARS-desktop         # UI-TARS - vision model for GUI automation, 2B/7B local, cross-platform (M4)
+https://github.com/microsoft/fara                    # Fara-7B - Microsoft 7B computer-use model, screenshot→action, local/Ollama (M4)
+https://github.com/CelestoAI/SmolVM                  # SmolVM - Firecracker microVM sandbox for agents, <500ms boot, snapshots (M3)
+https://github.com/mnfst/manifest                    # Manifest - smart model routing, auto-selects cheapest capable model (M2)
+https://github.com/web-infra-dev/midscene            # Midscene - vision-AI web automation + self-testing, MCP support (M3)
+https://github.com/maplibre/maplibre-gl-js            # MapLibre GL JS - open-source vector tile maps, Tier 2/3 fragment (M3)
 
 # === DESKTOP INTEGRATION ===
 https://github.com/Alexays/Waybar                  # Waybar - customizable Wayland bar (Niri-compatible)
