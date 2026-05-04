@@ -51,8 +51,13 @@ https://github.com/openai/codex                    # Codex CLI - speed-optimized
 https://github.com/paul-gauthier/aider             # Aider - git-native pair programming
 https://github.com/charmbracelet/crush             # Crush - beautiful TUI coding agent
 https://github.com/simstudioai/sim                 # Sim Studio - visual agentic workflow builder, 1000+ integrations, self-hostable (Apache-2.0)
-https://github.com/browser-use/browser-use          # Browser Use - AI agent browser automation (click/type/navigate/extract). M3+ "do this on the web"
-https://github.com/vercel-labs/agent-browser         # Agent Browser - headless browser built for AI agents. Pairs with browser-use for web tasks
+https://github.com/browser-use/browser-use          # Browser Use - AI agent browser automation (click/type/navigate/extract). M3+
+https://github.com/vercel-labs/agent-browser         # Agent Browser - headless browser built for AI agents. Pairs with browser-use
+https://github.com/firecrawl/firecrawl              # Firecrawl - web→markdown pipeline, Rust SDK, MCP server. Web context for orchestrator (M2)
+https://github.com/Skyvern-AI/skyvern               # Skyvern - visual browser RPA, Ollama-compatible, CAPTCHA/2FA, self-host (M3)
+https://github.com/lightpanda-io/browser             # Lightpanda - Zig headless browser, 11x faster than Playwright, 2MB binary (M3)
+https://github.com/mem0ai/mem0                       # Mem0 - persistent AI memory layer, self-hostable. Context engine augmentation (M2)
+https://github.com/bytedance/UI-TARS-desktop         # UI-TARS - vision model for GUI automation, 2B/7B local, cross-platform (M4)
 
 # === DESKTOP INTEGRATION ===
 https://github.com/Alexays/Waybar                  # Waybar - customizable Wayland bar (Niri-compatible)
