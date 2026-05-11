@@ -1,13 +1,11 @@
 #!/bin/bash
 # IndOS Desktop Session
-# Starts Niri compositor → IndOS shell → orchestrator → Waybar → SwayNC
+# Starts Niri compositor with IndOS environment
 #
-# This is the session entry point, registered as a .desktop file
-# in /usr/share/wayland-sessions/ for display managers (greetd, etc.)
-#
-# Session manager: UWSM (systemd-aware, crash recovery)
+# This is the session entry point for greetd.
+# Niri's config.kdl handles spawning: foot, waybar, swaync, calamares
 
-set -euo pipefail
+# NO set -euo pipefail — session must always reach niri regardless of failures
 
 # === Environment ===
 export XDG_CURRENT_DESKTOP=IndOS
@@ -27,10 +25,7 @@ export INDOS_DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/indos"
 export INDOS_SETTINGS="/usr/share/indos/settings"
 
 # Ensure directories exist
-mkdir -p "$INDOS_CONFIG_DIR"
-mkdir -p "$INDOS_DATA_DIR"
-mkdir -p "$INDOS_DATA_DIR/context"
-mkdir -p "$INDOS_DATA_DIR/sessions"
+mkdir -p "$INDOS_CONFIG_DIR" "$INDOS_DATA_DIR" 2>/dev/null || true
 
 # === Deploy default configs if not present ===
 
@@ -54,49 +49,6 @@ if [ ! -d "$HOME/.config/swaync" ]; then
     cp "$INDOS_SETTINGS/swaync/style.css" "$HOME/.config/swaync/style.css" 2>/dev/null || true
 fi
 
-# Install indos-waybar helper to PATH
-mkdir -p "$HOME/.local/bin"
-if [ ! -f "$HOME/.local/bin/indos-waybar" ]; then
-    cp "$INDOS_SETTINGS/waybar/indos-waybar.sh" "$HOME/.local/bin/indos-waybar" 2>/dev/null || true
-    chmod +x "$HOME/.local/bin/indos-waybar" 2>/dev/null || true
-fi
-export PATH="$HOME/.local/bin:$PATH"
-
-# === Pre-launch: Start background services ===
-
-# 1. Start Ollama (if not running via systemd)
-if ! systemctl --user is-active ollama.service &>/dev/null; then
-    if ! pgrep -x ollama > /dev/null 2>&1; then
-        echo "[IndOS] Starting Ollama inference server..."
-        ollama serve &
-        sleep 1
-    fi
-fi
-
-# 2. Start IndOS orchestrator (systemd user service)
-if systemctl --user is-enabled indos-orchestrator.service > /dev/null 2>&1; then
-    systemctl --user start indos-orchestrator.service
-    echo "[IndOS] Orchestrator started via systemd."
-else
-    echo "[IndOS] Starting orchestrator directly..."
-    indos-orchestrator &
-    sleep 0.5
-fi
-
-# 3. Start voice pipeline (optional)
-if [ -f "$INDOS_CONFIG_DIR/voice.enabled" ]; then
-    echo "[IndOS] Starting voice pipeline..."
-    indos-voice &
-fi
-
 # === Launch Niri compositor ===
-# Niri's config.kdl spawns: indos-shell, waybar, swaync at startup
-#
-# If UWSM is available, use it for crash recovery + session management
-if command -v uwsm &>/dev/null; then
-    echo "[IndOS] Launching Niri via UWSM (crash recovery enabled)..."
-    exec uwsm start niri
-else
-    echo "[IndOS] Launching Niri directly..."
-    exec niri
-fi
+# Niri's config.kdl spawns: foot, waybar, swaync, calamares at startup
+exec niri

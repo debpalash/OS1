@@ -1,95 +1,114 @@
 # IndOS ISO Package List (CachyOS Base)
-# Performance-optimized Arch Linux with CachyOS kernel + repos
-# Packages from cachyos/cachyos-v3 repos are x86-64-v3 compiled
+# No inline comments — pacman treats them as part of the package name
 
-# ═══ CachyOS BASE ═══
+# CachyOS base
 base
 cachyos-keyring
 cachyos-mirrorlist
 cachyos-v3-mirrorlist
 cachyos-settings
 
-# ═══ KERNEL (CachyOS optimized) ═══
-linux-cachyos                    # Linux 7.x, BORE scheduler, x86-64-v3 (default)
+# Kernel: CachyOS 7.x (BORE scheduler) + LTS fallback
+linux-cachyos
 linux-cachyos-headers
-linux-cachyos-lts                # LTS fallback kernel (boot menu option)
+linux-cachyos-lts
 linux-cachyos-lts-headers
 linux-firmware
 
-# ═══ BOOT ═══
+# Boot
 mkinitcpio
 mkinitcpio-archiso
 grub
 efibootmgr
 syslinux
+systemd-ukify
+mtools
+edk2-shell
 
-# ═══ NETWORKING ═══
+# Networking
 networkmanager
 iwd
 openssh
 curl
 wget
 
-# ═══ DISPLAY (GPU) ═══
+# Display (GPU)
 mesa
 vulkan-intel
 vulkan-radeon
 xdg-desktop-portal
 xdg-desktop-portal-gtk
 
-# ═══ COMPOSITOR ═══
+# Compositor
 niri
 
-# ═══ BAR + NOTIFICATIONS ═══
+# Bar + Notifications
 waybar
-swaynotificationcenter
+swaync
 
-# ═══ DISPLAY MANAGER ═══
+# Display manager
 greetd
 greetd-tuigreet
 
-# ═══ AUDIO ═══
+# Audio
 pipewire
 pipewire-pulse
 pipewire-alsa
 wireplumber
 
-# ═══ TERMINALS ═══
+# Terminals
 foot
 alacritty
 
-# ═══ SHELL ═══
+# Shell
 zsh
 starship
 
-# ═══ FONTS ═══
-ttf-inter
+# Fonts
+inter-font
 ttf-jetbrains-mono-nerd
 noto-fonts
 noto-fonts-emoji
 
-# ═══ AI STACK ═══
+# AI stack
 ollama
 
-# ═══ VOICE PIPELINE ═══
+# Voice pipeline deps
 python
 python-pip
 python-numpy
-# faster-whisper + piper installed via pip in customize script
 
-# ═══ PERFORMANCE (CachyOS extras) ═══
-cachyos-rate-mirrors              # Fast mirror selection
-cachyos-ananicy-rules             # Auto process priority (AI workloads get priority)
-ananicy-cpp                       # Process scheduler (CachyOS optimized)
-zram-generator                    # Compressed swap (more RAM for models)
+# CachyOS performance
+cachyos-rate-mirrors
+ananicy-cpp
+zram-generator
 
-# ═══ BUILD TOOLS ═══
+# Build tools
 base-devel
 git
 rustup
 gcc
 
-# ═══ UTILITIES ═══
+# Installer (CachyOS Calamares — offline mode, Niri-only)
+cachyos-calamares-next
+os-prober
+dosfstools
+btrfs-progs
+f2fs-tools
+xfsprogs
+dmidecode
+hwinfo
+rsync
+squashfs-tools
+polkit
+qt6-svg
+qt6-declarative
+qt6-imageformats
+kpmcore
+ckbcomp
+libpwquality
+
+# Utilities
 htop
 btop
 fastfetch
@@ -98,5 +117,5 @@ less
 nano
 vim
 unzip
-socat                             # IPC testing utility
-jq                                # JSON processing
+socat
+jq

@@ -14,8 +14,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 ISO_PROFILE="$SCRIPT_DIR"
-WORK_DIR="${1:-/tmp/indos-build}"
-OUT_DIR="${2:-/tmp/indos-out}"
+# Use disk-backed dirs — /tmp is tmpfs (RAM) and too small for ISO builds
+WORK_DIR="${1:-${PROJECT_ROOT}/build/work}"
+OUT_DIR="${2:-${PROJECT_ROOT}/build/out}"
 
 echo "═══════════════════════════════════════════"
 echo " IndOS ISO Builder (CachyOS Base)"
@@ -66,20 +67,34 @@ Server = https://de-mirror.cachyos.org/repo/$repo/$arch
 Server = https://us-mirror.cachyos.org/repo/$repo/$arch
 EOF
 
-# Step 2: Build release binaries
+# Step 2: Build release binaries (as the real user, not root)
 echo ""
 echo "[2/5] Building release binaries..."
-(cd "$PROJECT_ROOT/indos-orchestrator" && cargo build --release)
-(cd "$PROJECT_ROOT/indos-shell" && cargo build --release)
+if [[ -n "${SUDO_USER:-}" ]]; then
+    echo "    Building as $SUDO_USER (root has no rustup)..."
+    sudo -u "$SUDO_USER" bash -c "cd '$PROJECT_ROOT/indos-orchestrator' && cargo build --release"
+    sudo -u "$SUDO_USER" bash -c "cd '$PROJECT_ROOT/indos-shell' && cargo build --release"
+else
+    (cd "$PROJECT_ROOT/indos-orchestrator" && cargo build --release)
+    (cd "$PROJECT_ROOT/indos-shell" && cargo build --release)
+fi
 
 # Step 3: Copy binaries into airootfs overlay
 echo ""
 echo "[3/5] Installing binaries..."
 mkdir -p "$ISO_PROFILE/airootfs/usr/local/bin"
-cp "$PROJECT_ROOT/indos-orchestrator/target/release/indos-orchestrator" \
-   "$ISO_PROFILE/airootfs/usr/local/bin/"
-cp "$PROJECT_ROOT/indos-shell/target/release/indos-shell" \
-   "$ISO_PROFILE/airootfs/usr/local/bin/"
+if [[ -f "$PROJECT_ROOT/indos-orchestrator/target/release/indos-orchestrator" ]]; then
+    cp "$PROJECT_ROOT/indos-orchestrator/target/release/indos-orchestrator" \
+       "$ISO_PROFILE/airootfs/usr/local/bin/"
+else
+    echo "    WARNING: indos-orchestrator binary not found, skipping"
+fi
+if [[ -f "$PROJECT_ROOT/indos-shell/target/release/indos-shell" ]]; then
+    cp "$PROJECT_ROOT/indos-shell/target/release/indos-shell" \
+       "$ISO_PROFILE/airootfs/usr/local/bin/"
+else
+    echo "    WARNING: indos-shell binary not found, skipping"
+fi
 
 # Copy session script
 cp "$PROJECT_ROOT/indos-settings/session/indos-session.sh" \
@@ -100,7 +115,18 @@ cp "$PROJECT_ROOT/indos-settings/swaync/style.css" "$SKEL/swaync/" 2>/dev/null |
 echo ""
 echo "[5/5] Building ISO image..."
 mkdir -p "$OUT_DIR"
+
+# Run mkarchiso with debug output to catch silent failures
+set +e
 mkarchiso -v -w "$WORK_DIR" -o "$OUT_DIR" "$ISO_PROFILE"
+MKARCHISO_EXIT=$?
+set -e
+
+if [[ $MKARCHISO_EXIT -ne 0 ]]; then
+    echo ""
+    echo "ERROR: mkarchiso failed with exit code $MKARCHISO_EXIT"
+    exit $MKARCHISO_EXIT
+fi
 
 echo ""
 echo "═══════════════════════════════════════════"

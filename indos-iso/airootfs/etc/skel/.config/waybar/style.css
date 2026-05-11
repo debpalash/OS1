@@ -1,0 +1,202 @@
+/* IndOS Waybar Theme
+ * Dark, glassmorphic aesthetic matching the generative desktop
+ * Accent: #7aa2f7 (IndOS blue)
+ */
+
+/* === GLOBAL === */
+* {
+    font-family: "Inter", "JetBrains Mono Nerd Font", sans-serif;
+    font-size: 13px;
+    min-height: 0;
+}
+
+window#waybar {
+    background: rgba(26, 27, 38, 0.85);
+    border-radius: 12px;
+    border: 1px solid rgba(122, 162, 247, 0.15);
+    color: #c0caf5;
+}
+
+/* Remove default button styling */
+button {
+    border: none;
+    border-radius: 6px;
+    padding: 0 6px;
+    margin: 4px 2px;
+    background: transparent;
+    color: #c0caf5;
+    transition: all 0.2s ease;
+}
+
+button:hover {
+    background: rgba(122, 162, 247, 0.15);
+    color: #7aa2f7;
+}
+
+/* === LEFT MODULES === */
+
+#custom-indos-logo {
+    color: #7aa2f7;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 0 12px;
+    margin-right: 4px;
+}
+
+#custom-indos-logo:hover {
+    color: #89b4fa;
+}
+
+#workspaces button {
+    padding: 0 6px;
+    color: #565f89;
+}
+
+#workspaces button.active {
+    color: #7aa2f7;
+    background: rgba(122, 162, 247, 0.1);
+}
+
+#window {
+    color: #a9b1d6;
+    font-style: italic;
+    padding: 0 8px;
+}
+
+/* === CENTER MODULES (AI Status) === */
+
+#custom-ai-status {
+    padding: 0 12px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+#custom-ai-status.idle {
+    color: #565f89;
+}
+
+#custom-ai-status.thinking {
+    color: #e0af68;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+#custom-ai-status.streaming {
+    color: #7aa2f7;
+    animation: pulse 0.8s ease-in-out infinite;
+}
+
+#custom-ai-status.error {
+    color: #f7768e;
+}
+
+#custom-voice-status {
+    padding: 0 8px;
+    font-size: 16px;
+}
+
+#custom-voice-status.off {
+    color: #565f89;
+}
+
+#custom-voice-status.listening {
+    color: #9ece6a;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+#custom-voice-status.speaking {
+    color: #7aa2f7;
+}
+
+#custom-voice-status.processing {
+    color: #e0af68;
+    animation: pulse 0.6s ease-in-out infinite;
+}
+
+/* === RIGHT MODULES === */
+
+#custom-privacy-zone {
+    padding: 0 8px;
+    font-size: 15px;
+}
+
+#custom-privacy-zone.green {
+    color: #9ece6a;
+}
+
+#custom-privacy-zone.yellow {
+    color: #e0af68;
+}
+
+#custom-privacy-zone.red {
+    color: #f7768e;
+}
+
+#custom-model-status {
+    color: #bb9af7;
+    padding: 0 8px;
+    font-size: 12px;
+}
+
+#pulseaudio {
+    padding: 0 8px;
+}
+
+#pulseaudio.muted {
+    color: #565f89;
+}
+
+#network {
+    padding: 0 8px;
+}
+
+#network.disconnected {
+    color: #f7768e;
+}
+
+#cpu {
+    padding: 0 6px;
+    color: #9ece6a;
+}
+
+#memory {
+    padding: 0 6px;
+    color: #e0af68;
+}
+
+#battery {
+    padding: 0 8px;
+}
+
+#battery.charging {
+    color: #9ece6a;
+}
+
+#battery.warning:not(.charging) {
+    color: #e0af68;
+}
+
+#battery.critical:not(.charging) {
+    color: #f7768e;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+#clock {
+    color: #7aa2f7;
+    font-weight: 600;
+    padding: 0 10px;
+}
+
+#tray {
+    padding: 0 4px;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+/* === ANIMATIONS === */
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}

@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: no
+# SPDX-License-Identifier: CC0-1.0
+#
+# IndOS Calamares Branding
+---
+componentName: indos
+
+welcomeStyleCalamares: false
+
+welcomeExpandingLogo: true
+
+windowExpanding: normal
+
+windowSize: 1100px,580px
+
+windowPlacement: center
+
+sidebar: qml,bottom
+
+navigation: widget
+
+strings:
+    productName:         IndOS
+    shortProductName:    IndOS
+    version:             2026.05
+    shortVersion:        2026.05
+    versionedName:       IndOS Generative Desktop
+    shortVersionedName:  IndOS
+    bootloaderEntryName: IndOS
+    productUrl:          https://github.com/user/IndOS
+    supportUrl:          https://github.com/user/IndOS/issues
+    knownIssuesUrl:      https://github.com/user/IndOS/issues
+    releaseNotesUrl:     https://github.com/user/IndOS/releases
+
+images:
+    productLogo:         "logo.png"
+    productIcon:         "icon.png"
+    productWelcome:      "welcome.png"
+
+style:
+    SidebarBackground:        "#0d1117"
+    SidebarText:              "#c9d1d9"
+    SidebarTextCurrent:       "#0d1117"
+    SidebarBackgroundCurrent: "#58a6ff"
+
+slideshow:               "show.qml"
+
+slideshowAPI: 2
+
+uploadServer:
+    type:    "none"

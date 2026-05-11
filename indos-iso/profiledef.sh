@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # IndOS ISO Profile — CachyOS-based archiso
-# Build: mkarchiso -v -w /tmp/indos-build -o /tmp/ /path/to/indos-iso/
+# Build: sudo bash ./indos-iso/build-iso.sh
 #
 # Base: CachyOS (linux-cachyos, BORE scheduler, x86-64-v3)
-# Filesystem: ext4 (universal, simple, fast — no subvolume complexity)
+# Filesystem: ext4 (universal, simple, fast)
 # Ships: Niri + IndOS shell + Ollama + voice pipeline + greetd
 
 set -euo pipefail
@@ -16,9 +16,9 @@ iso_application="IndOS Generative Desktop"
 iso_version="$(date +%Y.%m.%d)"
 install_dir="arch"
 buildmodes=('iso')
-bootmodes=('bios.syslinux.mbr' 'bios.syslinux.eltorito'
-            'uefi-ia32.grub.esp' 'uefi-x64.grub.esp'
-            'uefi-ia32.grub.eltorito' 'uefi-x64.grub.eltorito')
+# UEFI systemd-boot disabled: Bash 5.3 breaks mkarchiso's du-based FAT sizing
+# The installed system gets GRUB EFI via Calamares — this only affects live ISO boot
+bootmodes=('bios.syslinux')
 arch="x86_64"
 pacman_conf="pacman.conf"
 
@@ -26,8 +26,7 @@ pacman_conf="pacman.conf"
 airootfs_image_type="squashfs"
 airootfs_image_tool_options=('-comp' 'zstd' '-Xcompression-level' '15')
 
-# Installed system uses ext4 — simple, universal, no maintenance overhead
-# (btrfs snapshots are nice but add complexity IndOS doesn't need yet)
+# Installed system uses ext4
 rootfs_image_type="ext4"
 
 file_permissions=(

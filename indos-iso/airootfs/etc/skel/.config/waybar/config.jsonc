@@ -1,0 +1,169 @@
+// IndOS Waybar Configuration
+// AI-aware status bar for the generative desktop
+// Integrates with: orchestrator, voice pipeline, model fabric, privacy filter
+{
+    "layer": "top",
+    "position": "top",
+    "height": 36,
+    "spacing": 8,
+    "margin-top": 4,
+    "margin-left": 8,
+    "margin-right": 8,
+
+    "modules-left": [
+        "custom/indos-logo",
+        "niri/workspaces",
+        "niri/window"
+    ],
+
+    "modules-center": [
+        "custom/ai-status",
+        "custom/voice-status"
+    ],
+
+    "modules-right": [
+        "custom/privacy-zone",
+        "custom/model-status",
+        "pulseaudio",
+        "network",
+        "cpu",
+        "memory",
+        "battery",
+        "clock",
+        "tray"
+    ],
+
+    // === LEFT: IndOS branding + Niri workspace/window ===
+
+    "custom/indos-logo": {
+        "format": " IndOS",
+        "tooltip": "IndOS Generative Desktop",
+        "on-click": "indos-shell --toggle"
+    },
+
+    "niri/workspaces": {
+        "format": "{icon}",
+        "format-icons": {
+            "active": "●",
+            "default": "○"
+        }
+    },
+
+    "niri/window": {
+        "format": "{}",
+        "max-length": 40,
+        "rewrite": {
+            "(.*) — Firefox": " $1",
+            "(.*) - Visual Studio Code": " $1",
+            "(.*)": "$1"
+        }
+    },
+
+    // === CENTER: AI status indicators ===
+
+    "custom/ai-status": {
+        "exec": "indos-waybar ai-status",
+        "interval": 3,
+        "return-type": "json",
+        "format": "{icon} {text}",
+        "format-icons": {
+            "idle": "󰚩",
+            "thinking": "󰔟",
+            "streaming": "󰓃",
+            "error": "󰅜"
+        },
+        "tooltip-format": "{}",
+        "on-click": "indos-shell --toggle"
+    },
+
+    "custom/voice-status": {
+        "exec": "indos-waybar voice-status",
+        "interval": 1,
+        "return-type": "json",
+        "format": "{icon}",
+        "format-icons": {
+            "off": "󰍭",
+            "listening": "󰍬",
+            "speaking": "󰔊",
+            "processing": "󰔟"
+        },
+        "tooltip-format": "Voice: {}",
+        "on-click": "indos-voice --toggle"
+    },
+
+    // === RIGHT: Privacy + Model + System ===
+
+    "custom/privacy-zone": {
+        "exec": "indos-waybar privacy-zone",
+        "interval": 5,
+        "return-type": "json",
+        "format": "{icon}",
+        "format-icons": {
+            "green": "󰒃",
+            "yellow": "󰒄",
+            "red": "󰒅"
+        },
+        "tooltip-format": "Privacy: {}"
+    },
+
+    "custom/model-status": {
+        "exec": "indos-waybar model-status",
+        "interval": 5,
+        "return-type": "json",
+        "format": "󰧑 {text}",
+        "tooltip-format": "Model: {}",
+        "on-click": "indos-shell --fragment model-switcher"
+    },
+
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-muted": "󰝟 muted",
+        "format-icons": {
+            "default": ["󰕿", "󰖀", "󰕾"]
+        },
+        "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+        "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+",
+        "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-"
+    },
+
+    "network": {
+        "format-wifi": "󰤨 {signalStrength}%",
+        "format-ethernet": "󰈀 {ifname}",
+        "format-disconnected": "󰤭 offline",
+        "tooltip-format-wifi": "{essid} ({signalStrength}%)\n{ipaddr}/{cidr}",
+        "tooltip-format-ethernet": "{ifname}\n{ipaddr}/{cidr}",
+        "on-click": "indos-shell --fragment network-manager"
+    },
+
+    "cpu": {
+        "format": "󰻠 {usage}%",
+        "interval": 3,
+        "on-click": "indos-shell --fragment system-monitor"
+    },
+
+    "memory": {
+        "format": "󰍛 {percentage}%",
+        "tooltip-format": "RAM: {used:0.1f}G / {total:0.1f}G\nSwap: {swapUsed:0.1f}G / {swapTotal:0.1f}G",
+        "interval": 5,
+        "on-click": "indos-shell --fragment system-monitor"
+    },
+
+    "battery": {
+        "format": "{icon} {capacity}%",
+        "format-charging": "󰂄 {capacity}%",
+        "format-plugged": "󰚥 {capacity}%",
+        "format-icons": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
+        "tooltip-format": "{timeTo}\n{power:.1f}W"
+    },
+
+    "clock": {
+        "format": "  {:%H:%M}",
+        "format-alt": "  {:%a %b %d, %Y}",
+        "tooltip-format": "<tt>{calendar}</tt>"
+    },
+
+    "tray": {
+        "icon-size": 16,
+        "spacing": 8
+    }
+}

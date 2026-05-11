@@ -39,3 +39,6 @@ api_keys.toml
 *.img
 work/
 out/
+
+# ISO build artifacts
+build/

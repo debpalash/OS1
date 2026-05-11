@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# indos-monitor — Auto-connect to running IndOS VM and stream logs
+# Uses SSH key auth (no sshpass needed)
+# Usage: ./indos-monitor [log|shell|watch|run CMD]
+
+set -euo pipefail
+
+SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -o ConnectTimeout=3"
+SSH_CMD="ssh ${SSH_OPTS} indos@localhost -p 2222"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
+DIM='\033[2m'
+NC='\033[0m'
+
+wait_for_vm() {
+    echo -e "${CYAN}⏳ Waiting for VM SSH...${NC}"
+    local attempts=0
+    while ! ${SSH_CMD} "true" 2>/dev/null; do
+        attempts=$((attempts + 1))
+        if (( attempts > 60 )); then
+            echo -e "${RED}✗ VM not reachable after 60s${NC}"
+            echo -e "  Run: ${CYAN}./indos-dev test${NC}"
+            exit 1
+        fi
+        sleep 1
+        printf "\r${DIM}  %ds...${NC}" "$attempts"
+    done
+    printf "\r${GREEN}✓ Connected!${NC}            \n"
+}
+
+cmd_log() {
+    echo -e "${CYAN}━━━ IndOS VM Log Stream ━━━${NC}"
+    wait_for_vm
+    echo -e "${DIM}Press Ctrl+C to stop${NC}"
+    echo ""
+    ${SSH_CMD} "
+        tail -f /home/indos/.cache/calamares/session.log 2>/dev/null &
+        tail -f /tmp/calamares.log 2>/dev/null &
+        sudo journalctl -f --no-pager -p err 2>/dev/null &
+        wait
+    "
+}
+
+cmd_shell() {
+    echo -e "${CYAN}━━━ IndOS VM Shell ━━━${NC}"
+    wait_for_vm
+    ssh ${SSH_OPTS} -t indos@localhost -p 2222
+}
+
+cmd_watch() {
+    echo -e "${CYAN}━━━ IndOS VM Status ━━━${NC}"
+    wait_for_vm
+    echo ""
+    ${SSH_CMD} "
+        echo '=== DISKS ==='
+        lsblk
+        echo ''
+        echo '=== CALAMARES ==='
+        ps aux | grep -v grep | grep calamares || echo '(not running)'
+        echo ''
+        echo '=== LAST ERRORS ==='
+        grep -i 'error\|failed' /home/indos/.cache/calamares/session.log 2>/dev/null | tail -5 || echo '(none)'
+    "
+}
+
+cmd_run() {
+    wait_for_vm
+    ${SSH_CMD} "$*"
+}
+
+case "${1:-help}" in
+    log)    cmd_log ;;
+    shell)  cmd_shell ;;
+    watch)  cmd_watch ;;
+    run)    shift; cmd_run "$@" ;;
+    *)
+        echo "Usage: ./indos-monitor <log|shell|watch|run CMD>"
+        echo ""
+        echo "  log     Stream calamares + system logs"
+        echo "  shell   Interactive SSH to VM"
+        echo "  watch   One-shot status dump"
+        echo "  run CMD Run command in VM"
+        ;;
+esac
