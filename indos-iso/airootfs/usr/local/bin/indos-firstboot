@@ -1,0 +1,155 @@
+#!/bin/bash
+# IndOS First-Boot Welcome
+# Shows a terminal-based welcome on first login after install.
+# Writes ~/.config/indos/setup-done when complete so it never runs again.
+
+MARKER="${XDG_CONFIG_HOME:-$HOME/.config}/indos/setup-done"
+
+# Already completed — bail out
+[ -f "$MARKER" ] && exit 0
+
+# ---------------------------------------------------------------------------
+# If we're not already inside the foot welcome terminal, spawn it and exit.
+# The spawned foot runs this same script with _INDOS_FIRSTBOOT_INNER=1.
+# ---------------------------------------------------------------------------
+if [ -z "$_INDOS_FIRSTBOOT_INNER" ]; then
+    # Wait briefly for Niri to be ready so foot can open a window
+    sleep 2
+    export _INDOS_FIRSTBOOT_INNER=1
+    exec foot --title "IndOS Setup" -e "$0"
+fi
+
+# ---------------------------------------------------------------------------
+# Helper
+# ---------------------------------------------------------------------------
+clear_screen() {
+    clear
+    printf '\n'
+}
+
+# ---------------------------------------------------------------------------
+# 1. Welcome
+# ---------------------------------------------------------------------------
+clear_screen
+cat <<'EOF'
+  ╔══════════════════════════════════════════════════╗
+  ║                                                  ║
+  ║      Welcome to IndOS — The AI-First Desktop     ║
+  ║                                                  ║
+  ╚══════════════════════════════════════════════════╝
+
+  IndOS is a CachyOS-based Linux distribution built
+  around an always-available AI assistant powered by
+  local models via Ollama.
+
+  Let's finish setting up your system.
+
+EOF
+read -rp "  Press ENTER to continue... "
+
+# ---------------------------------------------------------------------------
+# 2. Timezone
+# ---------------------------------------------------------------------------
+clear_screen
+
+# Detect current timezone
+if [ -L /etc/localtime ]; then
+    CURRENT_TZ="$(readlink /etc/localtime | sed 's|.*/zoneinfo/||')"
+else
+    CURRENT_TZ="UTC"
+fi
+
+echo "  ── Timezone ──────────────────────────────────────"
+echo
+echo "  Detected timezone: $CURRENT_TZ"
+echo
+read -rp "  Enter timezone (or press ENTER to keep '$CURRENT_TZ'): " NEW_TZ
+
+if [ -n "$NEW_TZ" ]; then
+    if [ -f "/usr/share/zoneinfo/$NEW_TZ" ]; then
+        sudo timedatectl set-timezone "$NEW_TZ" 2>/dev/null \
+            || sudo ln -sf "/usr/share/zoneinfo/$NEW_TZ" /etc/localtime 2>/dev/null
+        echo "  Timezone set to $NEW_TZ"
+    else
+        echo "  Invalid timezone '$NEW_TZ' — keeping $CURRENT_TZ"
+    fi
+else
+    echo "  Keeping $CURRENT_TZ"
+fi
+echo
+sleep 1
+
+# ---------------------------------------------------------------------------
+# 3. Ollama model
+# ---------------------------------------------------------------------------
+clear_screen
+
+DEFAULT_MODEL="qwen2.5:0.5b"
+
+# Pick a larger model on beefy GPUs (>= 8 GB VRAM)
+if command -v nvidia-smi &>/dev/null; then
+    VRAM_MB=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null | head -1)
+    if [ -n "$VRAM_MB" ] && [ "$VRAM_MB" -ge 8000 ] 2>/dev/null; then
+        DEFAULT_MODEL="qwen2.5:3b"
+    fi
+fi
+
+echo "  ── AI Model Setup ────────────────────────────────"
+echo
+echo "  IndOS uses Ollama to run a local AI model."
+echo "  Recommended model for your hardware: $DEFAULT_MODEL"
+echo
+echo "  Options:"
+echo "    1) Pull '$DEFAULT_MODEL' now"
+echo "    2) Skip (you can pull a model later with 'ollama pull')"
+echo
+read -rp "  Choice [1]: " MODEL_CHOICE
+MODEL_CHOICE="${MODEL_CHOICE:-1}"
+
+if [ "$MODEL_CHOICE" = "1" ]; then
+    echo
+    echo "  Pulling $DEFAULT_MODEL …"
+    echo "  (This may take a few minutes depending on your connection.)"
+    echo
+
+    if command -v ollama &>/dev/null; then
+        ollama pull "$DEFAULT_MODEL"
+        pull_rc=$?
+        echo
+        if [ $pull_rc -eq 0 ]; then
+            echo "  ✓ Model ready."
+        else
+            echo "  ✗ Pull failed — you can retry later with: ollama pull $DEFAULT_MODEL"
+        fi
+    else
+        echo "  ✗ Ollama not found. Install it first, then run: ollama pull $DEFAULT_MODEL"
+    fi
+else
+    echo
+    echo "  Skipped. Run 'ollama pull $DEFAULT_MODEL' whenever you're ready."
+fi
+
+echo
+sleep 1
+
+# ---------------------------------------------------------------------------
+# 4. Done
+# ---------------------------------------------------------------------------
+clear_screen
+cat <<'EOF'
+  ╔══════════════════════════════════════════════════╗
+  ║                                                  ║
+  ║            Setup complete — enjoy IndOS!          ║
+  ║                                                  ║
+  ╚══════════════════════════════════════════════════╝
+
+  • Press Super to open the app launcher
+  • The AI assistant is always available via the shell
+  • Settings are in ~/.config/indos/
+
+EOF
+read -rp "  Press ENTER to close this window... "
+
+# Write marker
+mkdir -p "$(dirname "$MARKER")"
+touch "$MARKER"

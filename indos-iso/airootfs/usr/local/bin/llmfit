@@ -1,0 +1,106 @@
+#!/bin/bash
+# llmfit — IndOS hardware scanner & LLM model recommender
+# Detects GPU, RAM, disk, CPU and recommends the best Ollama model tier.
+set -euo pipefail
+
+# --- RAM ---
+ram_kb=$(awk '/^MemTotal:/ { print $2 }' /proc/meminfo)
+ram_gb=$(( ram_kb / 1024 / 1024 ))
+
+# --- CPU ---
+cpu_cores=$(nproc)
+
+# --- Disk (free space on / or /home) ---
+if mountpoint -q /home 2>/dev/null; then
+    disk_free_gb=$(df --output=avail /home | tail -1 | awk '{ printf "%d", $1/1024/1024 }')
+else
+    disk_free_gb=$(df --output=avail / | tail -1 | awk '{ printf "%d", $1/1024/1024 }')
+fi
+
+# --- GPU ---
+gpu_name="none"
+vram_mb=0
+
+if command -v lspci &>/dev/null; then
+    # Try NVIDIA first, then AMD, then Intel
+    gpu_line=$(lspci | grep -iE 'VGA|3D|Display' | grep -i nvidia | head -1) || true
+    if [ -z "$gpu_line" ]; then
+        gpu_line=$(lspci | grep -iE 'VGA|3D|Display' | grep -iE 'AMD|ATI' | head -1) || true
+    fi
+    if [ -z "$gpu_line" ]; then
+        gpu_line=$(lspci | grep -iE 'VGA|3D|Display' | head -1) || true
+    fi
+
+    if [ -n "$gpu_line" ]; then
+        gpu_name=$(echo "$gpu_line" | sed 's/.*: //')
+    fi
+fi
+
+# Try to read VRAM from DRM sysfs (works for NVIDIA, AMD, Intel)
+for card_dir in /sys/class/drm/card*/device; do
+    [ -d "$card_dir" ] || continue
+
+    # AMD: mem_info_vram_total (bytes)
+    if [ -f "$card_dir/mem_info_vram_total" ]; then
+        vram_bytes=$(cat "$card_dir/mem_info_vram_total")
+        candidate=$(( vram_bytes / 1024 / 1024 ))
+        [ "$candidate" -gt "$vram_mb" ] && vram_mb=$candidate
+    fi
+
+    # Try resource file parsing (PCI BAR sizes)
+    if [ "$vram_mb" -eq 0 ] && [ -f "$card_dir/resource" ]; then
+        while IFS=' ' read -r start end _flags; do
+            [ "$start" = "0x0000000000000000" ] && continue
+            start_dec=$((start))
+            end_dec=$((end))
+            bar_size=$(( (end_dec - start_dec + 1) / 1024 / 1024 ))
+            [ "$bar_size" -gt "$vram_mb" ] && vram_mb=$bar_size
+        done < "$card_dir/resource"
+    fi
+done
+
+# NVIDIA: try nvidia-smi if available and we haven't got VRAM yet
+if [ "$vram_mb" -eq 0 ] && command -v nvidia-smi &>/dev/null; then
+    vram_mb=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ') || true
+    vram_mb=${vram_mb:-0}
+fi
+
+# --- Model recommendation ---
+has_gpu=false
+[ "$vram_mb" -gt 0 ] && has_gpu=true
+
+if [ "$ram_gb" -ge 16 ] && [ "$vram_mb" -ge 6144 ]; then
+    recommended_model="qwen2.5:14b"
+    recommended_tier="large"
+elif [ "$ram_gb" -ge 8 ] && { "$has_gpu" || [ "$ram_gb" -ge 12 ]; }; then
+    recommended_model="qwen2.5:7b"
+    recommended_tier="medium"
+elif [ "$ram_gb" -ge 4 ] || [ "$vram_mb" -gt 0 ]; then
+    recommended_model="qwen2.5:1.5b"
+    recommended_tier="small"
+else
+    recommended_model="qwen2.5:0.5b"
+    recommended_tier="tiny"
+fi
+
+# --- Output JSON ---
+json=$(cat <<EOF
+{
+  "ram_gb": ${ram_gb},
+  "gpu": "${gpu_name}",
+  "vram_mb": ${vram_mb},
+  "disk_free_gb": ${disk_free_gb},
+  "cpu_cores": ${cpu_cores},
+  "recommended_model": "${recommended_model}",
+  "recommended_tier": "${recommended_tier}"
+}
+EOF
+)
+
+# Write to config
+config_dir="${HOME}/.config/indos"
+mkdir -p "$config_dir"
+echo "$json" > "$config_dir/hardware.json"
+
+# Print to stdout
+echo "$json"

@@ -29,6 +29,7 @@ mod fragments;
 use fragments::registry::{FragmentDescriptor, FragmentRegistry};
 use iced::widget::{column, container, row, scrollable, text, text_input, Column};
 use iced::{Element, Length, Task, Theme};
+use iced::futures::SinkExt;
 use iced::window;
 use iced_layershell::actions::LayerShellCustomActionWithId;
 use iced_layershell::build_pattern::daemon;
@@ -184,14 +185,11 @@ fn update(shell: &mut IndOSShell, message: Message) -> Task<Message> {
                 shell.is_generating = true;
                 shell.streaming_buffer.clear();
 
-                // Send to orchestrator
+                // Stream from orchestrator
                 let socket_path = shell.socket_path.clone();
-                Task::perform(
-                    send_to_orchestrator(socket_path, content),
-                    |result| match result {
-                        Ok(response) => Message::StreamDone(response),
-                        Err(e) => Message::OrchestratorError(e.to_string()),
-                    },
+                Task::run(
+                    stream_from_orchestrator(socket_path, content),
+                    |msg| msg,
                 )
             }
 
@@ -341,67 +339,110 @@ impl TryInto<LayerShellCustomActionWithId> for Message {
     }
 }
 
-/// Send a message to the orchestrator and get the full response
-async fn send_to_orchestrator(socket_path: PathBuf, content: String) -> Result<String, String> {
-    let stream = UnixStream::connect(&socket_path)
-        .await
-        .map_err(|e| format!("Cannot connect to orchestrator: {}. Is it running?", e))?;
+/// Stream messages from the orchestrator, yielding Message variants as chunks arrive.
+fn stream_from_orchestrator(
+    socket_path: PathBuf,
+    content: String,
+) -> impl iced::futures::Stream<Item = Message> {
+    iced::stream::channel(64, async move |mut sender| {
+        let stream = match UnixStream::connect(&socket_path).await {
+            Ok(s) => s,
+            Err(e) => {
+                let _ = sender
+                    .send(Message::OrchestratorError(format!(
+                        "Cannot connect to orchestrator: {}. Is it running?",
+                        e
+                    )))
+                    .await;
+                return;
+            }
+        };
 
-    let (reader, mut writer) = stream.into_split();
+        let (reader, mut writer) = stream.into_split();
 
-    // Send chat message
-    let msg = ShellMessage::Chat {
-        content,
-        session_id: None,
-    };
-    let mut json = serde_json::to_string(&msg).map_err(|e| e.to_string())?;
-    json.push('\n');
-    writer
-        .write_all(json.as_bytes())
-        .await
-        .map_err(|e| e.to_string())?;
-    writer.flush().await.map_err(|e| e.to_string())?;
-
-    // Read responses
-    let mut reader = BufReader::new(reader);
-    let mut line = String::new();
-    let mut full_response = String::new();
-
-    loop {
-        line.clear();
-        let n = reader
-            .read_line(&mut line)
-            .await
-            .map_err(|e| e.to_string())?;
-        if n == 0 {
-            break;
+        // Send chat message
+        let msg = ShellMessage::Chat {
+            content,
+            session_id: None,
+        };
+        let json = match serde_json::to_string(&msg) {
+            Ok(mut j) => {
+                j.push('\n');
+                j
+            }
+            Err(e) => {
+                let _ = sender.send(Message::OrchestratorError(e.to_string())).await;
+                return;
+            }
+        };
+        if let Err(e) = writer.write_all(json.as_bytes()).await {
+            let _ = sender.send(Message::OrchestratorError(e.to_string())).await;
+            return;
+        }
+        if let Err(e) = writer.flush().await {
+            let _ = sender.send(Message::OrchestratorError(e.to_string())).await;
+            return;
         }
 
-        let trimmed = line.trim();
-        if trimmed.is_empty() {
-            continue;
-        }
+        let _ = sender.send(Message::Connected).await;
 
-        if let Ok(resp) = serde_json::from_str::<OrchestratorResponse>(trimmed) {
-            match resp {
-                OrchestratorResponse::Chunk { content } => {
-                    full_response.push_str(&content);
+        // Read responses as they arrive
+        let mut reader = BufReader::new(reader);
+        let mut line = String::new();
+        let mut full_response = String::new();
+
+        loop {
+            line.clear();
+            let n = match reader.read_line(&mut line).await {
+                Ok(n) => n,
+                Err(e) => {
+                    let _ = sender.send(Message::OrchestratorError(e.to_string())).await;
+                    return;
                 }
-                OrchestratorResponse::Done { full_response: fr } => {
-                    if full_response.is_empty() {
-                        full_response = fr;
+            };
+            if n == 0 {
+                // Connection closed without Done — finalize with what we have
+                let _ = sender.send(Message::StreamDone(full_response)).await;
+                return;
+            }
+
+            let trimmed = line.trim();
+            if trimmed.is_empty() {
+                continue;
+            }
+
+            if let Ok(resp) = serde_json::from_str::<OrchestratorResponse>(trimmed) {
+                match resp {
+                    OrchestratorResponse::Chunk { content } => {
+                        full_response.push_str(&content);
+                        let _ = sender.send(Message::StreamChunk(content)).await;
                     }
-                    break;
+                    OrchestratorResponse::Done { full_response: fr } => {
+                        let final_text = if full_response.is_empty() {
+                            fr
+                        } else {
+                            full_response
+                        };
+                        let _ = sender.send(Message::StreamDone(final_text)).await;
+                        return;
+                    }
+                    OrchestratorResponse::Error { message } => {
+                        let _ = sender.send(Message::OrchestratorError(message)).await;
+                        return;
+                    }
+                    OrchestratorResponse::Fragment { fragment } => {
+                        if let Ok(descriptor) =
+                            serde_json::from_value::<FragmentDescriptor>(fragment)
+                        {
+                            let _ =
+                                sender.send(Message::FragmentReceived(descriptor)).await;
+                        }
+                    }
+                    _ => {}
                 }
-                OrchestratorResponse::Error { message } => {
-                    return Err(message);
-                }
-                _ => {}
             }
         }
-    }
-
-    Ok(full_response)
+    })
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

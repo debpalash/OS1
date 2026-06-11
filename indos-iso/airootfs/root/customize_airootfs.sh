@@ -139,6 +139,7 @@ chmod +x /usr/local/bin/indos-orchestrator 2>/dev/null || true
 chmod +x /usr/local/bin/indos-shell 2>/dev/null || true
 chmod +x /usr/local/bin/indos-session 2>/dev/null || true
 chmod +x /usr/local/bin/indos-waybar 2>/dev/null || true
+chmod +x /usr/local/bin/llmfit 2>/dev/null || true
 
 # === PRE-CONFIGURE SYSTEM (prevent systemd-firstboot interactive wizard) ===
 # Without these, systemd-firstboot blocks boot with timezone/locale prompts

@@ -49,6 +49,11 @@ if [ ! -d "$HOME/.config/swaync" ]; then
     cp "$INDOS_SETTINGS/swaync/style.css" "$HOME/.config/swaync/style.css" 2>/dev/null || true
 fi
 
+# === First-boot welcome (installed systems only) ===
+if [ ! -d /run/archiso ] && command -v indos-firstboot >/dev/null; then
+    indos-firstboot &
+fi
+
 # === Launch Niri compositor ===
 # Niri's config.kdl spawns: foot, waybar, swaync, calamares at startup.
 # niri-session (not raw niri) activates systemd graphical-session.target —
