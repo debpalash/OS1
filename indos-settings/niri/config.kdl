@@ -8,14 +8,13 @@ spawn-at-startup "swaync"
 spawn-at-startup "foot"            // Guaranteed terminal (always works)
 spawn-at-startup "indos-shell"  // verified stable in QEMU/virgl (autotest 2026-06-11)
 
-// Auto-launch installer on live ISO
-spawn-at-startup "sh" "-c" "sleep 4; sudo -E calamares >> /tmp/calamares.log 2>&1"
+// Calamares installer is launched via XDG autostart desktop entry (not here)
 
 // === INPUT ===
 input {
     keyboard {
         xkb {
-            // Users can override in ~/.config/niri/config.kdl
+            layout "us"
         }
         // Fast repeat for power users
         repeat-delay 300

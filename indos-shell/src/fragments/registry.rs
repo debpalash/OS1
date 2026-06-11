@@ -3,8 +3,7 @@
 //! When the orchestrator sends an A2UI fragment, the shell looks up
 //! the component name here and renders the matching native widget.
 
-use iced::widget::Column;
-use iced::{Element, Length};
+use iced::Element;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

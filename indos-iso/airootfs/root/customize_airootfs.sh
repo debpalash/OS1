@@ -155,6 +155,17 @@ ln -sf /usr/share/zoneinfo/UTC /etc/localtime
 # Keymap
 echo "KEYMAP=us" > /etc/vconsole.conf
 
+# X11 keyboard layout (prevents systemd-localed 'custom' fallback)
+mkdir -p /etc/X11/xorg.conf.d
+cat > /etc/X11/xorg.conf.d/00-keyboard.conf << 'EOF'
+Section "InputClass"
+    Identifier "system-keyboard"
+    MatchIsKeyboard "on"
+    Option "XkbLayout" "us"
+    Option "XkbModel" "pc105"
+EndSection
+EOF
+
 # Machine ID (generate now, prevents firstboot trigger)
 systemd-machine-id-setup 2>/dev/null || true
 
@@ -245,7 +256,7 @@ cat > /etc/skel/.config/autostart/calamares.desktop << 'EOF'
 Type=Application
 Name=Install IndOS
 Comment=Install IndOS Generative Desktop to disk
-Exec=sudo calamares
+Exec=sh -c 'sleep 3 && sudo -E calamares'
 Icon=calamares
 Terminal=false
 Categories=System;

@@ -9,10 +9,8 @@
 //! - **web**: fetch URL to markdown (via Firecrawl or builtin)
 //! - **fragments**: generate UI fragments for the shell
 
-use anyhow::Result;
 use indos_security::{AuditResult, SecurityEngine};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::path::Path;
 use tokio::process::Command;
 
