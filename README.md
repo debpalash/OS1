@@ -1,6 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/🇮🇳_Made_in_India-FF9933?style=for-the-badge" alt="Made in India" />
   <img src="https://img.shields.io/badge/AI--First_OS-7B2FF7?style=for-the-badge&logo=linux&logoColor=white" alt="AI-First OS" />
+  <img src="https://img.shields.io/badge/Written_in_Rust-000000?style=for-the-badge&logo=rust&logoColor=white" alt="Written in Rust" />
   <img src="https://img.shields.io/badge/Built_on_Arch-1793D1?style=for-the-badge&logo=archlinux&logoColor=white" alt="Built on Arch" />
   <img src="https://img.shields.io/badge/100%25_Open_Source-3DA639?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="Open Source" />
   <img src="https://img.shields.io/badge/License-GPL_3.0-blue?style=for-the-badge" alt="GPL-3.0" />
@@ -9,7 +10,7 @@
 # 🇮🇳 IndOS — India's Sovereign AI-First Operating System
 
 > **The first operating system where the conversation *is* the desktop.**
-> Built on Arch Linux. Powered by open-source generative AI. Made in India, for the world.
+> Written in Rust. Built on Arch Linux. Powered by open-source generative AI. Made in India, for the world.
 
 ---
 
@@ -21,7 +22,7 @@ Every major OS today bolts AI on top of a 40-year-old desktop metaphor — icons
 
 When you boot IndOS, there are no desktop icons, no start menus, no settings panels. There is one thing: **a surface that understands what you want and generates whatever you need, right now.** You express intent. The OS generates the right interface. The thing gets done.
 
-This is India's contribution to the next generation of computing — a **sovereign, open-source, AI-native operating system** that runs locally, respects your privacy, and doesn't depend on any single corporation or cloud.
+This is India's contribution to the next generation of computing — a **sovereign, open-source, AI-native operating system** written from the ground up in **Rust**. No C/C++ legacy. No patching decades-old code. A clean, memory-safe, blazing-fast foundation that runs locally, respects your privacy, and doesn't depend on any single corporation or cloud.
 
 ---
 
@@ -31,6 +32,7 @@ This is India's contribution to the next generation of computing — a **soverei
 |-----------|---------------|
 | 🇮🇳 **Sovereign** | Built in India. No vendor lock-in. No foreign cloud dependency for core functionality. |
 | 🤖 **AI-First** | AI isn't a feature — it's the entire interface. The conversation is the OS. |
+| 🦀 **Written in Rust** | Core OS layer built in Rust — memory-safe, blazing fast, zero-cost abstractions. No C/C++ legacy. |
 | 🏠 **Local-First** | Your desktop works offline. Your data stays on your machine. Local models by default. |
 | 🔓 **Open Source** | GPL-3.0. Every component is open. Built on Arch Linux and OSS generative AI. |
 | 🛡️ **Privacy by Design** | PII never leaves your device. API calls go through a privacy filter. You control everything. |
