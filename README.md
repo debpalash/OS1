@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/License-GPL_3.0-blue?style=for-the-badge" alt="GPL-3.0" />
 </p>
 
-# 🇮🇳 IndOS — India's Sovereign AI-First Operating System
+# 🇮🇳 IndOS — India's Sovereign AI-First Operating System with Rust
 
 > **The first operating system where the conversation *is* the desktop.**
 > Written in Rust. Built on Arch Linux. Powered by open-source generative AI. Made in India, for the world.
