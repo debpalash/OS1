@@ -34,6 +34,14 @@ pub enum ShellMessage {
     /// Cancel current generation
     #[serde(rename = "cancel")]
     Cancel,
+
+    /// List saved sessions
+    #[serde(rename = "list_sessions")]
+    ListSessions,
+
+    /// Load a specific session by ID
+    #[serde(rename = "load_session")]
+    LoadSession { session_id: String },
 }
 
 /// Message from orchestrator to shell
@@ -63,6 +71,20 @@ pub enum OrchestratorMessage {
     /// A2UI fragment to render
     #[serde(rename = "fragment")]
     Fragment { fragment: serde_json::Value },
+
+    /// List of saved sessions
+    #[serde(rename = "session_list")]
+    SessionList {
+        sessions: Vec<SessionInfo>,
+    },
+}
+
+/// Session metadata sent to the shell
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionInfo {
+    pub id: String,
+    pub title: Option<String>,
+    pub message_count: usize,
 }
 
 /// Get the socket path

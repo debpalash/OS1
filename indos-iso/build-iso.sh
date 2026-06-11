@@ -69,14 +69,27 @@ EOF
 
 # Step 2: Build release binaries (as the real user, not root)
 echo ""
-echo "[2/5] Building release binaries..."
-if [[ -n "${SUDO_USER:-}" ]]; then
-    echo "    Building as $SUDO_USER (root has no rustup)..."
-    sudo -u "$SUDO_USER" bash -c "cd '$PROJECT_ROOT/indos-orchestrator' && cargo build --release"
-    sudo -u "$SUDO_USER" bash -c "cd '$PROJECT_ROOT/indos-shell' && cargo build --release"
+if [[ "${INDOS_SKIP_CARGO:-}" == "1" ]]; then
+    echo "[2/5] Skipping cargo build (sources unchanged)..."
 else
-    (cd "$PROJECT_ROOT/indos-orchestrator" && cargo build --release)
-    (cd "$PROJECT_ROOT/indos-shell" && cargo build --release)
+    echo "[2/5] Building release binaries..."
+    if [[ -n "${SUDO_USER:-}" ]]; then
+        echo "    Building as $SUDO_USER (parallel)..."
+        # Build both crates in parallel
+        sudo -u "$SUDO_USER" bash -c "cd '$PROJECT_ROOT/indos-orchestrator' && cargo build --release" &
+        PID_ORCH=$!
+        sudo -u "$SUDO_USER" bash -c "cd '$PROJECT_ROOT/indos-shell' && cargo build --release" &
+        PID_SHELL=$!
+        wait $PID_ORCH || { echo "ERROR: orchestrator build failed"; exit 1; }
+        wait $PID_SHELL || { echo "ERROR: shell build failed"; exit 1; }
+    else
+        (cd "$PROJECT_ROOT/indos-orchestrator" && cargo build --release) &
+        PID_ORCH=$!
+        (cd "$PROJECT_ROOT/indos-shell" && cargo build --release) &
+        PID_SHELL=$!
+        wait $PID_ORCH || exit 1
+        wait $PID_SHELL || exit 1
+    fi
 fi
 
 # Step 3: Copy binaries into airootfs overlay

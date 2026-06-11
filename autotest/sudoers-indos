@@ -5,4 +5,4 @@
 # Note: build.sh is user-writable, so this effectively grants the agent
 # root on this machine for build purposes — that is the point of the
 # autonomous loop, but remove /etc/sudoers.d/indos to revoke it.
-pal ALL=(root) NOPASSWD: /home/pal/Desktop/IndOS/autotest/build.sh, /home/pal/Desktop/IndOS/autotest/build.sh --clean
+pal ALL=(root) NOPASSWD: /home/pal/Desktop/IndOS/autotest/build.sh, /home/pal/Desktop/IndOS/autotest/build.sh --clean, /home/pal/Desktop/IndOS/autotest/build.sh --quick

@@ -20,6 +20,7 @@
 //!              (local models)    (OpenCode/Claude)      (OS tools)
 //! ```
 
+mod agents;
 mod intent;
 mod ipc;
 mod ollama;
@@ -32,7 +33,7 @@ use anyhow::Result;
 use indos_context_engine::{ContextEngine, MemorySource, new_memory};
 use indos_privacy::{PrivacyFilter, PrivacyZone};
 use indos_security::SecurityEngine;
-use ipc::{IpcServer, OrchestratorMessage, ShellMessage};
+use ipc::{IpcServer, OrchestratorMessage, SessionInfo, ShellMessage};
 use ollama::{ChatMessage, OllamaClient};
 use session::SessionManager;
 use std::sync::Arc;
@@ -91,6 +92,8 @@ struct OrchestratorState {
     /// Conversation history for the active session
     conversation: Vec<ChatMessage>,
     system_prompt: String,
+    /// Active session ID for persistence
+    session_id: String,
 }
 
 #[tokio::main]
@@ -171,6 +174,7 @@ async fn main() -> Result<()> {
         security,
         conversation,
         system_prompt: config.system_prompt,
+        session_id,
     }));
 
     // Create message handler channel
@@ -262,12 +266,38 @@ async fn handle_message(
                 }
             };
 
-            // CodingAgent: log placeholder, fall through to Ollama for now
-            if let router::AgentTarget::CodingAgent(ref agent_name) = agent_target {
-                tracing::info!(
-                    "CodingAgent '{}' would be dispatched (not yet implemented, using LLM fallback)",
-                    agent_name
-                );
+            // CodingAgent: dispatch to external agent if available
+            if let router::AgentTarget::CodingAgent(_) = agent_target {
+                if let Some(agent) = agents::detect_agent().await {
+                    tracing::info!("Dispatching to coding agent: {:?}", agent);
+                    match agents::dispatch(&agent, &filtered_content, &resp_tx).await {
+                        Ok(response) => {
+                            tracing::info!("Agent response: {} chars", response.len());
+                            {
+                                let mut state = state.lock().await;
+                                state.conversation.push(ChatMessage {
+                                    role: "user".into(),
+                                    content: filtered_content,
+                                });
+                                state.conversation.push(ChatMessage {
+                                    role: "assistant".into(),
+                                    content: response.clone(),
+                                });
+                            }
+                            let _ = resp_tx
+                                .send(OrchestratorMessage::Done {
+                                    full_response: response,
+                                })
+                                .await;
+                            return Ok(());
+                        }
+                        Err(e) => {
+                            tracing::warn!("Agent dispatch failed, falling back to Ollama: {}", e);
+                        }
+                    }
+                } else {
+                    tracing::info!("No coding agent found, falling back to Ollama");
+                }
             }
 
             // Add filtered message to conversation (sent to LLM)
@@ -369,6 +399,11 @@ async fn handle_message(
                                 if let Err(e) = state.context.remember(memory).await {
                                     tracing::debug!("Context remember failed: {}", e);
                                 }
+                                let sid = state.session_id.clone();
+                                let msgs = state.conversation.clone();
+                                if let Err(e) = state.sessions.save_session(&sid, &msgs) {
+                                    tracing::warn!("Session save failed: {}", e);
+                                }
                                 let _ = resp_tx
                                     .send(OrchestratorMessage::Done {
                                         full_response: followup_response,
@@ -377,6 +412,14 @@ async fn handle_message(
                             }
                             Err(e) => {
                                 // Tool results are still useful even if follow-up fails
+                                {
+                                    let state = state.lock().await;
+                                    let sid = state.session_id.clone();
+                                    let msgs = state.conversation.clone();
+                                    if let Err(e) = state.sessions.save_session(&sid, &msgs) {
+                                        tracing::warn!("Session save failed: {}", e);
+                                    }
+                                }
                                 let _ = resp_tx
                                     .send(OrchestratorMessage::Done {
                                         full_response: format!("{}\n\n{}", parsed.text, tool_output),
@@ -396,6 +439,11 @@ async fn handle_message(
                             let memory = new_memory(&response, MemorySource::Conversation);
                             if let Err(e) = state.context.remember(memory).await {
                                 tracing::debug!("Context remember failed: {}", e);
+                            }
+                            let sid = state.session_id.clone();
+                            let msgs = state.conversation.clone();
+                            if let Err(e) = state.sessions.save_session(&sid, &msgs) {
+                                tracing::warn!("Session save failed: {}", e);
                             }
                         }
 
@@ -442,6 +490,65 @@ async fn handle_message(
                     full_response: "[cancelled]".into(),
                 })
                 .await;
+        }
+
+        ShellMessage::ListSessions => {
+            let state = state.lock().await;
+            let sessions: Vec<SessionInfo> = state
+                .sessions
+                .list_sessions()
+                .into_iter()
+                .map(|(id, title, message_count)| SessionInfo {
+                    id,
+                    title,
+                    message_count,
+                })
+                .collect();
+            let count = sessions.len();
+            let _ = resp_tx
+                .send(OrchestratorMessage::SessionList { sessions })
+                .await;
+            let _ = resp_tx
+                .send(OrchestratorMessage::Done {
+                    full_response: format!("{} sessions", count),
+                })
+                .await;
+        }
+
+        ShellMessage::LoadSession { session_id } => {
+            let mut state = state.lock().await;
+            match state.sessions.load_session(&session_id) {
+                Ok(messages) => {
+                    let msg_count = messages.len();
+                    state.conversation = if messages.is_empty() {
+                        vec![ChatMessage {
+                            role: "system".into(),
+                            content: state.system_prompt.clone(),
+                        }]
+                    } else {
+                        messages
+                    };
+                    state.session_id = session_id.clone();
+                    tracing::info!("Switched to session {} ({} messages)", session_id, msg_count);
+                    let _ = resp_tx
+                        .send(OrchestratorMessage::Done {
+                            full_response: format!("Loaded session {}", session_id),
+                        })
+                        .await;
+                }
+                Err(e) => {
+                    let _ = resp_tx
+                        .send(OrchestratorMessage::Error {
+                            message: format!("Failed to load session: {}", e),
+                        })
+                        .await;
+                    let _ = resp_tx
+                        .send(OrchestratorMessage::Done {
+                            full_response: String::new(),
+                        })
+                        .await;
+                }
+            }
         }
     }
 
