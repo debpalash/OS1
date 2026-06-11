@@ -42,3 +42,8 @@ out/
 
 # ISO build artifacts
 build/
+
+# Compiled binaries in ISO overlay (built from source)
+indos-iso/airootfs/usr/local/bin/indos-orchestrator
+indos-iso/airootfs/usr/local/bin/indos-session
+indos-iso/airootfs/usr/local/bin/indos-shell

@@ -1,4 +1,4 @@
-# IndOS — The ChatGPT Moment for Desktop OS
+# IndOS — India's Sovereign AI-First Operating System
 
 ## What ChatGPT Actually Did
 
@@ -261,11 +261,11 @@ OTA updates. Agent marketplace. Community-contributed UI fragments. Declarative 
 
 ## The Name
 
-**IndOS** — Independent Operating System.
+**IndOS** — **Ind**ia's **O**perating **S**ystem.
 
-Not owned by a corporation. Not locked to a cloud. Not dependent on any single AI provider. Independent.
+India's sovereign, AI-first operating system. Built on Arch Linux and open-source generative AI.
 
-Also: India OS. Built from India, for the world.
+Not owned by a corporation. Not locked to a cloud. Not dependent on any single AI provider. Sovereign and independent — built from India 🇮🇳, for the world 🌏.
 
 ---
 

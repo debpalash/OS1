@@ -1,6 +1,6 @@
 # Contributing to IndOS
 
-Thank you for your interest in contributing to IndOS.
+Thank you for your interest in contributing to IndOS — India's sovereign, AI-first operating system built on Arch Linux and open-source generative AI.
 
 ## Project Structure
 
