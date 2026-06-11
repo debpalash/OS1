@@ -8,6 +8,7 @@
 //! This module parses those blocks, executes the tools, and returns results.
 
 use crate::tools;
+use indos_security::SecurityEngine;
 
 /// A parsed tool call from LLM output
 #[derive(Debug, Clone)]
@@ -79,13 +80,13 @@ pub fn parse_tool_calls(response: &str) -> ParsedResponse {
     }
 }
 
-/// Execute all tool calls and format results for injection back into conversation
-pub async fn execute_tool_calls(calls: &[ToolCall]) -> String {
+/// Execute all tool calls with security checks and format results
+pub async fn execute_tool_calls(calls: &[ToolCall], security: &SecurityEngine) -> String {
     let mut results = String::new();
 
     for (i, call) in calls.iter().enumerate() {
         tracing::info!("Executing tool: {} ({})", call.tool, call.args);
-        let result = tools::execute_tool(&call.tool, &call.args).await;
+        let result = tools::execute_tool_checked(&call.tool, &call.args, security, "system").await;
 
         results.push_str(&format!(
             "Tool `{}` {}:\n{}\n",

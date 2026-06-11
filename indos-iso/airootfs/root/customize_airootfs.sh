@@ -16,6 +16,12 @@ systemctl enable NetworkManager
 systemctl enable greetd
 systemctl enable sshd
 
+# NetworkManager owns networking — systemd-networkd-wait-online otherwise
+# fails on the live ISO (no networkd config) and degrades boot state
+systemctl disable systemd-networkd.service systemd-networkd.socket \
+    systemd-networkd-wait-online.service 2>/dev/null || true
+systemctl mask systemd-networkd-wait-online.service
+
 # === CACHYOS PERFORMANCE TUNING ===
 # Enable ananicy (auto process priority — AI workloads get CPU priority)
 systemctl enable ananicy-cpp 2>/dev/null || true
@@ -64,14 +70,15 @@ WantedBy=default.target
 EOF
 
 # Ollama as user service (starts before orchestrator)
-# Models stored in shared location so build-time pulls are available at runtime
+# Models stored in user-writable dir (not /usr/share which is root-owned)
 cat > /etc/systemd/user/ollama-user.service << 'EOF'
 [Unit]
 Description=Ollama LLM Server (User)
 Before=indos-orchestrator.service
 
 [Service]
-Environment=OLLAMA_MODELS=/usr/share/ollama/models
+Environment=OLLAMA_MODELS=%h/.ollama/models
+ExecStartPre=/bin/mkdir -p %h/.ollama/models
 ExecStart=/usr/bin/ollama serve
 Restart=on-failure
 RestartSec=5
@@ -79,6 +86,11 @@ RestartSec=5
 [Install]
 WantedBy=default.target
 EOF
+
+# === ENABLE USER SERVICES GLOBALLY ===
+# --global enables for ALL users (works in chroot, unlike --user)
+systemctl --global enable ollama-user.service
+systemctl --global enable indos-orchestrator.service
 
 # === INSTALL VOICE PIPELINE DEPS ===
 echo "[IndOS] Installing voice pipeline..."
@@ -126,6 +138,24 @@ fi
 chmod +x /usr/local/bin/indos-orchestrator 2>/dev/null || true
 chmod +x /usr/local/bin/indos-shell 2>/dev/null || true
 chmod +x /usr/local/bin/indos-session 2>/dev/null || true
+chmod +x /usr/local/bin/indos-waybar 2>/dev/null || true
+
+# === PRE-CONFIGURE SYSTEM (prevent systemd-firstboot interactive wizard) ===
+# Without these, systemd-firstboot blocks boot with timezone/locale prompts
+
+# Locale
+echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
+locale-gen
+echo "LANG=en_US.UTF-8" > /etc/locale.conf
+
+# Timezone (UTC — user changes via Calamares installer or settings)
+ln -sf /usr/share/zoneinfo/UTC /etc/localtime
+
+# Keymap
+echo "KEYMAP=us" > /etc/vconsole.conf
+
+# Machine ID (generate now, prevents firstboot trigger)
+systemd-machine-id-setup 2>/dev/null || true
 
 # === BRANDING ===
 cat > /etc/hostname << 'EOF'
@@ -140,8 +170,8 @@ ID_LIKE=arch cachyos
 BUILD_ID=rolling
 VARIANT="Generative Desktop"
 VARIANT_ID=desktop
-HOME_URL="https://github.com/user/IndOS"
-DOCUMENTATION_URL="https://github.com/user/IndOS/wiki"
+HOME_URL="https://github.com/debpalash/IndOS"
+DOCUMENTATION_URL="https://github.com/debpalash/IndOS/wiki"
 LOGO=indos-logo
 EOF
 
@@ -188,9 +218,11 @@ cp -rf /root/indos-calamares/branding/indos /usr/share/calamares/branding/ 2>/de
 
 # 3. Only override specific module configs that IndOS needs differently
 #    Keep CachyOS defaults for: partition, locale, keyboard, users, etc.
-for module_conf in shellprocess_indos.conf unpackfs.conf bootloader.conf \
+for module_conf in shellprocess_indos.conf shellprocess_preinitcpio.conf \
+                   unpackfs.conf bootloader.conf \
                    welcome.conf services-systemd.conf displaymanager.conf \
-                   removeuser.conf finished.conf; do
+                   removeuser.conf finished.conf users.conf fstab.conf \
+                   locale.conf partition.conf; do
     if [ -f "/root/indos-calamares/modules/$module_conf" ]; then
         cp -f "/root/indos-calamares/modules/$module_conf" "/etc/calamares/modules/$module_conf"
         echo "  Overlaid: $module_conf"

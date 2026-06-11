@@ -47,3 +47,9 @@ build/
 indos-iso/airootfs/usr/local/bin/indos-orchestrator
 indos-iso/airootfs/usr/local/bin/indos-session
 indos-iso/airootfs/usr/local/bin/indos-shell
+
+# Test harness artifacts
+test-harness/results/
+test-logs/
+*.qcow2
+*.ppm

@@ -84,9 +84,34 @@ impl OllamaClient {
         }
     }
 
+    /// List all locally available model names
+    pub async fn list_models(&self) -> Vec<String> {
+        let url = format!("{}/api/tags", self.base_url);
+        match self.client.get(&url).send().await {
+            Ok(resp) => match resp.json::<ModelListResponse>().await {
+                Ok(list) => list.models.into_iter().map(|m| m.name).collect(),
+                Err(_) => vec![],
+            },
+            Err(_) => vec![],
+        }
+    }
+
     /// Send a chat message and stream the response, calling `on_chunk` for each token
     pub async fn chat_stream<F>(
         &self,
+        messages: &[ChatMessage],
+        on_chunk: F,
+    ) -> Result<String>
+    where
+        F: FnMut(&str),
+    {
+        self.chat_stream_with_model(&self.model, messages, on_chunk).await
+    }
+
+    /// Like chat_stream but allows overriding the model per-request
+    pub async fn chat_stream_with_model<F>(
+        &self,
+        model: &str,
         messages: &[ChatMessage],
         mut on_chunk: F,
     ) -> Result<String>
@@ -95,7 +120,7 @@ impl OllamaClient {
     {
         let url = format!("{}/api/chat", self.base_url);
         let req = ChatRequest {
-            model: self.model.clone(),
+            model: model.to_string(),
             messages: messages.to_vec(),
             stream: true,
         };

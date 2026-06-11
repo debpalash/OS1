@@ -100,9 +100,16 @@ fi
 cp "$PROJECT_ROOT/indos-settings/session/indos-session.sh" \
    "$ISO_PROFILE/airootfs/usr/local/bin/indos-session"
 
-# Step 4: Copy configs into skel
+# Copy waybar helper script (custom module data provider)
+cp "$PROJECT_ROOT/indos-settings/waybar/indos-waybar.sh" \
+   "$ISO_PROFILE/airootfs/usr/local/bin/indos-waybar"
+chmod +x "$ISO_PROFILE/airootfs/usr/local/bin/indos-waybar"
+
+# Step 4: Copy configs into skel AND /usr/share/indos/settings
 echo ""
 echo "[4/5] Installing default configs..."
+
+# a) Configs into /etc/skel (user gets them on useradd)
 SKEL="$ISO_PROFILE/airootfs/etc/skel/.config"
 mkdir -p "$SKEL"/{niri,waybar,swaync}
 cp "$PROJECT_ROOT/indos-settings/niri/config.kdl" "$SKEL/niri/" 2>/dev/null || true
@@ -110,6 +117,31 @@ cp "$PROJECT_ROOT/indos-settings/waybar/config.jsonc" "$SKEL/waybar/" 2>/dev/nul
 cp "$PROJECT_ROOT/indos-settings/waybar/style.css" "$SKEL/waybar/" 2>/dev/null || true
 cp "$PROJECT_ROOT/indos-settings/swaync/config.json" "$SKEL/swaync/" 2>/dev/null || true
 cp "$PROJECT_ROOT/indos-settings/swaync/style.css" "$SKEL/swaync/" 2>/dev/null || true
+
+# b) Configs into /usr/share/indos/settings (session script fallback)
+SETTINGS="$ISO_PROFILE/airootfs/usr/share/indos/settings"
+mkdir -p "$SETTINGS"/{niri,waybar,swaync}
+cp "$PROJECT_ROOT/indos-settings/niri/config.kdl" "$SETTINGS/niri/" 2>/dev/null || true
+cp "$PROJECT_ROOT/indos-settings/waybar/config.jsonc" "$SETTINGS/waybar/" 2>/dev/null || true
+cp "$PROJECT_ROOT/indos-settings/waybar/style.css" "$SETTINGS/waybar/" 2>/dev/null || true
+cp "$PROJECT_ROOT/indos-settings/swaync/config.json" "$SETTINGS/swaync/" 2>/dev/null || true
+cp "$PROJECT_ROOT/indos-settings/swaync/style.css" "$SETTINGS/swaync/" 2>/dev/null || true
+
+# c) Calamares overlay configs
+if [ -d "$PROJECT_ROOT/indos-iso/calamares" ]; then
+    mkdir -p "$ISO_PROFILE/airootfs/root/indos-calamares"
+    cp -r "$PROJECT_ROOT/indos-iso/calamares"/* "$ISO_PROFILE/airootfs/root/indos-calamares/"
+    echo "    Calamares overlay installed"
+fi
+
+# d) Dev SSH key for passwordless access during testing
+if [ -f "${HOME}/.ssh/id_ed25519.pub" ]; then
+    cp "${HOME}/.ssh/id_ed25519.pub" "$ISO_PROFILE/airootfs/root/dev-ssh-key.pub"
+    echo "    Dev SSH key installed"
+elif [ -n "${SUDO_USER:-}" ] && [ -f "/home/${SUDO_USER}/.ssh/id_ed25519.pub" ]; then
+    cp "/home/${SUDO_USER}/.ssh/id_ed25519.pub" "$ISO_PROFILE/airootfs/root/dev-ssh-key.pub"
+    echo "    Dev SSH key installed"
+fi
 
 # Step 5: Build ISO
 echo ""

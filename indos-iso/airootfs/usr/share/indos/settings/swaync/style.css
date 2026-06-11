@@ -1,0 +1,153 @@
+/* SwayNC theme — matches IndOS Waybar (Tokyo Night Dark) */
+
+.notification-row {
+    outline: none;
+}
+
+.notification-row:focus,
+.notification-row:hover {
+    background: rgba(122, 162, 247, 0.08);
+}
+
+.notification {
+    border-radius: 10px;
+    margin: 4px 8px;
+    padding: 0;
+    border: 1px solid rgba(122, 162, 247, 0.15);
+    background: rgba(26, 27, 38, 0.95);
+}
+
+.notification-content {
+    padding: 8px 12px;
+}
+
+.notification .summary {
+    color: #c0caf5;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.notification .body {
+    color: #a9b1d6;
+    font-size: 13px;
+}
+
+.notification .time {
+    color: #565f89;
+    font-size: 11px;
+}
+
+.notification .image {
+    border-radius: 8px;
+    margin-right: 8px;
+}
+
+/* Control center */
+.control-center {
+    background: rgba(26, 27, 38, 0.92);
+    border: 1px solid rgba(122, 162, 247, 0.2);
+    border-radius: 14px;
+    padding: 8px;
+}
+
+.control-center .notification {
+    background: rgba(36, 40, 59, 0.8);
+}
+
+/* Title */
+.widget-title {
+    color: #7aa2f7;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 8px 12px;
+}
+
+.widget-title button {
+    background: rgba(122, 162, 247, 0.15);
+    border: none;
+    border-radius: 6px;
+    color: #7aa2f7;
+    padding: 4px 12px;
+    font-size: 12px;
+}
+
+.widget-title button:hover {
+    background: rgba(122, 162, 247, 0.3);
+}
+
+/* DnD */
+.widget-dnd {
+    color: #a9b1d6;
+    padding: 4px 12px;
+    font-size: 13px;
+}
+
+.widget-dnd > switch {
+    border-radius: 10px;
+    background: rgba(86, 95, 137, 0.3);
+}
+
+.widget-dnd > switch:checked {
+    background: rgba(122, 162, 247, 0.4);
+}
+
+/* MPRIS */
+.widget-mpris {
+    background: rgba(36, 40, 59, 0.6);
+    border-radius: 10px;
+    margin: 4px 8px;
+    padding: 8px;
+}
+
+.widget-mpris .widget-mpris-title {
+    color: #c0caf5;
+    font-weight: 600;
+}
+
+.widget-mpris .widget-mpris-subtitle {
+    color: #a9b1d6;
+}
+
+/* Volume / Backlight sliders */
+.widget-volume,
+.widget-backlight {
+    padding: 4px 12px;
+}
+
+.widget-volume trough,
+.widget-backlight trough {
+    background: rgba(86, 95, 137, 0.3);
+    border-radius: 6px;
+    min-height: 6px;
+}
+
+.widget-volume highlight,
+.widget-backlight highlight {
+    background: #7aa2f7;
+    border-radius: 6px;
+}
+
+/* Action buttons on notifications */
+.notification-action {
+    background: rgba(122, 162, 247, 0.15);
+    border: 1px solid rgba(122, 162, 247, 0.2);
+    border-radius: 6px;
+    color: #7aa2f7;
+    padding: 4px 8px;
+    margin: 4px 2px;
+    font-size: 12px;
+}
+
+.notification-action:hover {
+    background: rgba(122, 162, 247, 0.3);
+}
+
+/* Inline reply */
+.inline-reply {
+    background: rgba(36, 40, 59, 0.8);
+    border: 1px solid rgba(122, 162, 247, 0.2);
+    border-radius: 6px;
+    color: #c0caf5;
+    padding: 6px 8px;
+    margin: 4px 0;
+}

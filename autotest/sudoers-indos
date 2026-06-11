@@ -1,0 +1,8 @@
+# IndOS autonomous build loop — allows the dev user to rebuild the ISO
+# without a password prompt. Install once with:
+#   sudo install -m 440 -o root -g root autotest/sudoers-indos /etc/sudoers.d/indos
+#
+# Note: build.sh is user-writable, so this effectively grants the agent
+# root on this machine for build purposes — that is the point of the
+# autonomous loop, but remove /etc/sudoers.d/indos to revoke it.
+pal ALL=(root) NOPASSWD: /home/pal/Desktop/IndOS/autotest/build.sh, /home/pal/Desktop/IndOS/autotest/build.sh --clean

@@ -50,5 +50,10 @@ if [ ! -d "$HOME/.config/swaync" ]; then
 fi
 
 # === Launch Niri compositor ===
-# Niri's config.kdl spawns: foot, waybar, swaync, calamares at startup
+# Niri's config.kdl spawns: foot, waybar, swaync, calamares at startup.
+# niri-session (not raw niri) activates systemd graphical-session.target —
+# without it xdg-desktop-portal fails and portal-dependent apps break.
+if command -v niri-session >/dev/null; then
+    exec niri-session
+fi
 exec niri

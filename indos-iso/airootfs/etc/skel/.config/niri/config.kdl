@@ -6,7 +6,7 @@
 spawn-at-startup "waybar"
 spawn-at-startup "swaync"
 spawn-at-startup "foot"            // Guaranteed terminal (always works)
-// spawn-at-startup "indos-shell"  // TODO: re-enable when shell GUI is stable
+spawn-at-startup "indos-shell"  // verified stable in QEMU/virgl (autotest 2026-06-11)
 
 // Auto-launch installer on live ISO
 spawn-at-startup "sh" "-c" "sleep 4; sudo -E calamares >> /tmp/calamares.log 2>&1"
@@ -191,7 +191,8 @@ binds {
     XF86AudioMute { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
 
     // Voice toggle (IndOS voice pipeline)
-    Mod+V { spawn "indos-voice" "--toggle"; }
+    // TODO: re-enable when indos-voice binary supports --toggle
+    // Mod+V { spawn "indos-voice" "--toggle"; }
 }
 
 // === ENVIRONMENT ===

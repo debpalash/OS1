@@ -30,6 +30,8 @@ mod tool_parser;
 
 use anyhow::Result;
 use indos_context_engine::{ContextEngine, MemorySource, new_memory};
+use indos_privacy::{PrivacyFilter, PrivacyZone};
+use indos_security::SecurityEngine;
 use ipc::{IpcServer, OrchestratorMessage, ShellMessage};
 use ollama::{ChatMessage, OllamaClient};
 use session::SessionManager;
@@ -84,6 +86,8 @@ struct OrchestratorState {
     ollama: OllamaClient,
     sessions: SessionManager,
     context: ContextEngine,
+    privacy: PrivacyFilter,
+    security: SecurityEngine,
     /// Conversation history for the active session
     conversation: Vec<ChatMessage>,
     system_prompt: String,
@@ -149,10 +153,22 @@ async fn main() -> Result<()> {
     };
 
     // Initialize state
+    let privacy = PrivacyFilter::new();
+    tracing::info!("✓ Privacy filter ready (zone: Yellow)");
+
+    let audit_path = data_dir.join("audit.jsonl");
+    let mut security = SecurityEngine::new(audit_path.to_str().unwrap_or("./audit.jsonl"));
+    match security.init() {
+        Ok(()) => tracing::info!("✓ Security engine ready"),
+        Err(e) => tracing::warn!("⚠ Security engine init failed: {}", e),
+    }
+
     let state = Arc::new(Mutex::new(OrchestratorState {
         ollama,
         sessions,
         context,
+        privacy,
+        security,
         conversation,
         system_prompt: config.system_prompt,
     }));
@@ -195,6 +211,23 @@ async fn handle_message(
         } => {
             tracing::info!("User: {}", content);
 
+            // Classify intent and route
+            let user_intent = intent::classify(&content);
+            let agent_target = router::route(&user_intent);
+            tracing::info!(
+                "Intent: {:?} (confidence: {:.2}) → {:?}",
+                user_intent.category, user_intent.confidence, agent_target
+            );
+
+            // Select model based on intent + available models
+            let model_name = {
+                let state_guard = state.lock().await;
+                let available = state_guard.ollama.list_models().await;
+                let selection = router::select_model(&user_intent, &available);
+                tracing::info!("Model: {} (tier: {:?})", selection.model, selection.tier);
+                selection.model
+            };
+
             // Remember user message in context engine
             {
                 let state = state.lock().await;
@@ -204,12 +237,45 @@ async fn handle_message(
                 }
             }
 
-            // Add user message to conversation
+            // Run privacy filter before sending to LLM
+            let filtered_content = {
+                let state = state.lock().await;
+                match state.privacy.filter(&content, PrivacyZone::Yellow) {
+                    Ok(result) => {
+                        if result.had_pii {
+                            tracing::info!(
+                                "Privacy: redacted {} entities before LLM",
+                                result.redacted_entities.len()
+                            );
+                        }
+                        result.sanitized_text
+                    }
+                    Err(e) => {
+                        tracing::warn!("Privacy filter blocked message: {}", e);
+                        let _ = resp_tx
+                            .send(OrchestratorMessage::Error {
+                                message: format!("Privacy: {}", e),
+                            })
+                            .await;
+                        return Ok(());
+                    }
+                }
+            };
+
+            // CodingAgent: log placeholder, fall through to Ollama for now
+            if let router::AgentTarget::CodingAgent(ref agent_name) = agent_target {
+                tracing::info!(
+                    "CodingAgent '{}' would be dispatched (not yet implemented, using LLM fallback)",
+                    agent_name
+                );
+            }
+
+            // Add filtered message to conversation (sent to LLM)
             {
                 let mut state = state.lock().await;
                 state.conversation.push(ChatMessage {
                     role: "user".into(),
-                    content: content.clone(),
+                    content: filtered_content,
                 });
             }
 
@@ -219,13 +285,14 @@ async fn handle_message(
                 state.conversation.clone()
             };
 
-            // Stream response from Ollama
+            // Stream response from Ollama with the selected model
             let resp_tx_clone = resp_tx.clone();
+            let model_for_stream = model_name.clone();
             let full_response = {
                 let state_guard = state.lock().await;
                 state_guard
                     .ollama
-                    .chat_stream(&messages, |chunk| {
+                    .chat_stream_with_model(&model_for_stream, &messages, |chunk| {
                         let tx = resp_tx_clone.clone();
                         let content = chunk.to_string();
                         let _ = tx.try_send(OrchestratorMessage::Chunk { content });
@@ -251,7 +318,10 @@ async fn handle_message(
                         }
 
                         // Execute tools
-                        let tool_output = tool_parser::execute_tool_calls(&parsed.tool_calls).await;
+                        let tool_output = {
+                            let state = state.lock().await;
+                            tool_parser::execute_tool_calls(&parsed.tool_calls, &state.security).await
+                        };
                         tracing::info!("Tool output: {} chars", tool_output.len());
 
                         // Feed tool results back into conversation
@@ -275,11 +345,12 @@ async fn handle_message(
 
                         // LLM generates follow-up with tool results
                         let resp_tx_clone2 = resp_tx.clone();
+                        let model_for_followup = model_name.clone();
                         let followup = {
                             let state_guard = state.lock().await;
                             state_guard
                                 .ollama
-                                .chat_stream(&messages, |chunk| {
+                                .chat_stream_with_model(&model_for_followup, &messages, |chunk| {
                                     let tx = resp_tx_clone2.clone();
                                     let content = chunk.to_string();
                                     let _ = tx.try_send(OrchestratorMessage::Chunk { content });
@@ -308,9 +379,7 @@ async fn handle_message(
                                 // Tool results are still useful even if follow-up fails
                                 let _ = resp_tx
                                     .send(OrchestratorMessage::Done {
-                                        full_response: format!("{}
-
-{}", parsed.text, tool_output),
+                                        full_response: format!("{}\n\n{}", parsed.text, tool_output),
                                     })
                                     .await;
                                 tracing::warn!("Follow-up generation failed: {}", e);

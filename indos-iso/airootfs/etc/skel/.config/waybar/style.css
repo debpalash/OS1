@@ -77,12 +77,12 @@ button:hover {
 
 #custom-ai-status.thinking {
     color: #e0af68;
-    animation: pulse 1.5s ease-in-out infinite;
+    animation: pulse 1.5s ease-in-out infinite alternate;
 }
 
 #custom-ai-status.streaming {
     color: #7aa2f7;
-    animation: pulse 0.8s ease-in-out infinite;
+    animation: pulse 0.8s ease-in-out infinite alternate;
 }
 
 #custom-ai-status.error {
@@ -100,7 +100,7 @@ button:hover {
 
 #custom-voice-status.listening {
     color: #9ece6a;
-    animation: pulse 1s ease-in-out infinite;
+    animation: pulse 1s ease-in-out infinite alternate;
 }
 
 #custom-voice-status.speaking {
@@ -109,7 +109,7 @@ button:hover {
 
 #custom-voice-status.processing {
     color: #e0af68;
-    animation: pulse 0.6s ease-in-out infinite;
+    animation: pulse 0.6s ease-in-out infinite alternate;
 }
 
 /* === RIGHT MODULES === */
@@ -177,7 +177,7 @@ button:hover {
 
 #battery.critical:not(.charging) {
     color: #f7768e;
-    animation: pulse 1s ease-in-out infinite;
+    animation: pulse 1s ease-in-out infinite alternate;
 }
 
 #clock {
@@ -197,6 +197,6 @@ button:hover {
 /* === ANIMATIONS === */
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+    from { opacity: 1; }
+    to { opacity: 0.5; }
 }

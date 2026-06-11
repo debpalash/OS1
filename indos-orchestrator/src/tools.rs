@@ -10,6 +10,7 @@
 //! - **fragments**: generate UI fragments for the shell
 
 use anyhow::Result;
+use indos_security::{AuditResult, SecurityEngine};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
@@ -152,6 +153,52 @@ pub async fn execute_tool(name: &str, args: &serde_json::Value) -> ToolResult {
         _ => ToolResult {
             success: false,
             output: format!("Unknown tool: {}", name),
+            fragment: None,
+        },
+    }
+}
+
+/// Execute a tool call with security checks.
+/// Maps each tool to a security action+target, checks with SecurityEngine,
+/// then dispatches to the actual implementation if allowed.
+pub async fn execute_tool_checked(
+    name: &str,
+    args: &serde_json::Value,
+    security: &SecurityEngine,
+    agent_id: &str,
+) -> ToolResult {
+    let (action, target) = match name {
+        "list_files" => ("read", args["path"].as_str().unwrap_or(".").to_string()),
+        "read_file" => ("read", args["path"].as_str().unwrap_or("").to_string()),
+        "write_file" => ("write", args["path"].as_str().unwrap_or("").to_string()),
+        "search_files" => ("read", args["directory"].as_str().unwrap_or(".").to_string()),
+        "run_command" => ("spawn", args["command"].as_str().unwrap_or("").to_string()),
+        "package_manager" => ("spawn", format!("pacman {}", args["action"].as_str().unwrap_or(""))),
+        "system_info" => ("read", "/proc".to_string()),
+        _ => {
+            return ToolResult {
+                success: false,
+                output: format!("Unknown tool: {}", name),
+                fragment: None,
+            };
+        }
+    };
+
+    match security.check(agent_id, action, &target) {
+        AuditResult::Allowed => execute_tool(name, args).await,
+        AuditResult::Denied => ToolResult {
+            success: false,
+            output: format!("SECURITY DENIED: {} not allowed to {} '{}'", agent_id, action, target),
+            fragment: None,
+        },
+        AuditResult::RequiresApproval => ToolResult {
+            success: false,
+            output: format!("APPROVAL REQUIRED: {} wants to {} '{}'", agent_id, action, target),
+            fragment: None,
+        },
+        AuditResult::Error(e) => ToolResult {
+            success: false,
+            output: format!("Security error: {}", e),
             fragment: None,
         },
     }

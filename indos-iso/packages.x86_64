@@ -41,6 +41,7 @@ xdg-desktop-portal-gtk
 
 # Compositor
 niri
+xwayland-satellite
 
 # Bar + Notifications
 waybar
@@ -76,6 +77,7 @@ ollama
 # Voice pipeline deps
 python
 python-pip
+python-toml
 python-numpy
 
 # CachyOS performance
@@ -112,6 +114,7 @@ libpwquality
 htop
 btop
 fastfetch
+inetutils
 man-db
 less
 nano

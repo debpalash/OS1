@@ -1,0 +1,24 @@
+#!/bin/bash
+# IndOS installer repair — run inside the target chroot BEFORE initcpio.
+#
+# mkarchiso wipes /boot in the airootfs and rewrites every
+# /etc/mkinitcpio.d/*.preset to the 'archiso' preset, so the unpacked
+# target cannot build an initramfs. Kernel images survive at
+# /usr/lib/modules/<ver>/vmlinuz — restore them and regenerate stock
+# presets from the mkinitcpio template (same as pacman's install hook).
+#
+# Invoked by Calamares shellprocess@indos_preinitcpio; lives as a file
+# because Calamares' shellprocess treats $vars in inline commands as its
+# own variable substitutions.
+set -e
+
+rm -f /etc/mkinitcpio.conf.d/archiso.conf
+
+for kdir in /usr/lib/modules/*/; do
+    [ -f "$kdir/pkgbase" ] || continue
+    pkgbase=$(cat "$kdir/pkgbase")
+    install -Dm644 "$kdir/vmlinuz" "/boot/vmlinuz-$pkgbase"
+    sed "s|%PKGBASE%|$pkgbase|g" /usr/share/mkinitcpio/hook.preset \
+        > "/etc/mkinitcpio.d/$pkgbase.preset"
+    echo "indos-preinitcpio: restored $pkgbase"
+done
