@@ -205,7 +205,7 @@ python3 autotest/autotest.py
 - [ ] fast-mempalace integration — persistent semantic memory
 - [ ] Proactive assistant — morning briefing, pattern recognition
 - [ ] Voice-first interaction mode
-- [ ] Plymouth animated boot splash
+- [x] Plymouth animated boot splash — breathing coral ring, HER-style
 
 ### 🔮 v3.0 — Community
 

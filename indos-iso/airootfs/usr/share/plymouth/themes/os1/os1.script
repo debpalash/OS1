@@ -1,0 +1,127 @@
+# OS 1 boot splash — warm, breathing, HER-inspired.
+# All visuals are pre-rendered PNGs (see gen_assets.py); no fonts or the
+# label plugin are needed inside the initramfs.
+
+# ---- palette: warm dark gradient ----
+Window.SetBackgroundTopColor(0.169, 0.118, 0.102);     # 2b1e1a
+Window.SetBackgroundBottomColor(0.110, 0.071, 0.063);  # 1c1210
+
+screen.w = Window.GetWidth();
+screen.h = Window.GetHeight();
+screen.cx = screen.w / 2;
+screen.cy = screen.h / 2;
+
+# ---- the breathing ring ----
+ring.image = Image("ring.png");
+ring.sprite = Sprite(ring.image);
+ring.sprite.SetPosition(screen.cx - ring.image.GetWidth() / 2,
+                        screen.cy - ring.image.GetHeight() / 2,
+                        2);
+
+# ---- "OS 1" wordmark, centered inside the ring ----
+wordmark.w = 260;
+wordmark.image = Image("wordmark.png");
+wordmark.scaled = wordmark.image.Scale(wordmark.w,
+                                       wordmark.image.GetHeight() * wordmark.w / wordmark.image.GetWidth());
+wordmark.sprite = Sprite(wordmark.scaled);
+wordmark.sprite.SetPosition(screen.cx - wordmark.scaled.GetWidth() / 2,
+                            screen.cy - wordmark.scaled.GetHeight() / 2,
+                            3);
+
+# ---- progress bar (thin warm capsule, low on screen) ----
+bar.w = Math.Int(screen.w * 0.22);
+bar.h = 4;
+bar.x = screen.cx - bar.w / 2;
+bar.y = Math.Int(screen.h * 0.80);
+
+track.image = Image("progress_track.png").Scale(bar.w, bar.h);
+track.sprite = Sprite(track.image);
+track.sprite.SetPosition(bar.x, bar.y, 4);
+
+fill.source = Image("progress_fill.png");
+fill.sprite = Sprite();
+fill.sprite.SetPosition(bar.x, bar.y, 5);
+
+# ---- password dots ----
+dots.image = Image("dot.png");
+dots.max = 24;
+for (i = 0; i < dots.max; i++) {
+    dots.sprite[i] = Sprite(dots.image);
+    dots.sprite[i].SetOpacity(0);
+    dots.sprite[i].SetPosition(0, 0, 6);
+}
+
+# ---- state ----
+state.frame = 0;
+state.progress = 0;
+state.mode = "boot";          # "boot" | "password"
+
+fun clamp01(v) {
+    if (v < 0) return 0;
+    if (v > 1) return 1;
+    return v;
+}
+
+fun refresh_callback() {
+    state.frame++;
+
+    # gentle fade-in over the first ~1.5 s (50 fps)
+    intro = clamp01(state.frame / 75);
+
+    # slow breathing: ~4 s cycle
+    breath = 0.62 + 0.30 * Math.Sin(state.frame / 32);
+
+    ring.sprite.SetOpacity(intro * breath);
+    wordmark.sprite.SetOpacity(intro);
+
+    if (state.mode == "boot") {
+        track.sprite.SetOpacity(intro * 0.9);
+        w = Math.Int(bar.w * state.progress);
+        if (w < 2) w = 2;
+        fill.sprite.SetImage(fill.source.Scale(w, bar.h));
+        # shimmer: the fill glows in sync with the ring
+        fill.sprite.SetOpacity(intro * (0.75 + 0.25 * Math.Sin(state.frame / 16)));
+    } else {
+        track.sprite.SetOpacity(0);
+        fill.sprite.SetOpacity(0);
+    }
+}
+Plymouth.SetRefreshFunction(refresh_callback);
+
+fun boot_progress_callback(duration, progress) {
+    state.progress = clamp01(progress);
+}
+Plymouth.SetBootProgressFunction(boot_progress_callback);
+
+fun hide_dots() {
+    for (i = 0; i < dots.max; i++)
+        dots.sprite[i].SetOpacity(0);
+}
+
+fun display_password_callback(prompt, bullets) {
+    state.mode = "password";
+    if (bullets > dots.max) bullets = dots.max;
+    spacing = 26;
+    x0 = screen.cx - (bullets - 1) * spacing / 2 - dots.image.GetWidth() / 2;
+    y = Math.Int(screen.h * 0.72);
+    for (i = 0; i < dots.max; i++) {
+        if (i < bullets) {
+            dots.sprite[i].SetPosition(x0 + i * spacing, y, 6);
+            dots.sprite[i].SetOpacity(1);
+        } else {
+            dots.sprite[i].SetOpacity(0);
+        }
+    }
+}
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+
+fun display_normal_callback() {
+    state.mode = "boot";
+    hide_dots();
+}
+Plymouth.SetDisplayNormalFunction(display_normal_callback);
+
+fun quit_callback() {
+    hide_dots();
+}
+Plymouth.SetQuitFunction(quit_callback);

@@ -18,6 +18,7 @@ linux-firmware
 # Boot
 mkinitcpio
 mkinitcpio-archiso
+plymouth
 grub
 efibootmgr
 syslinux

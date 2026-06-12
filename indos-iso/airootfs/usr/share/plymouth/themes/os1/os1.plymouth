@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=OS 1
+Description=Your computer, as a conversation. Warm coral boot splash.
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/os1
+ScriptFile=/usr/share/plymouth/themes/os1/os1.script
