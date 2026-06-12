@@ -53,3 +53,4 @@ test-harness/results/
 test-logs/
 *.qcow2
 *.ppm
+indos-iso/airootfs/usr/local/bin/indos-voiced
