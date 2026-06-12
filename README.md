@@ -1,28 +1,27 @@
 <p align="center">
-  <img src="assets/desktop.png" alt="IndOS Desktop — The Generative Desktop" width="800" />
+  <img src="assets/desktop.png" alt="OS 1 — The Generative Desktop" width="800" />
 </p>
 
-<h1 align="center">🇮🇳 IndOS</h1>
+<h1 align="center">OS 1</h1>
 
 <p align="center">
-  <strong>India's Sovereign AI-First Operating System</strong><br/>
-  <em>The first OS where the conversation <b>is</b> the desktop.</em>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/🇮🇳_Made_in_India-FF9933?style=for-the-badge" alt="Made in India" />
-  <img src="https://img.shields.io/badge/AI--Native_OS-7B2FF7?style=for-the-badge&logo=linux&logoColor=white" alt="AI-Native OS" />
-  <img src="https://img.shields.io/badge/Written_in_Rust-000000?style=for-the-badge&logo=rust&logoColor=white" alt="Written in Rust" />
-  <img src="https://img.shields.io/badge/Built_on_Arch-1793D1?style=for-the-badge&logo=archlinux&logoColor=white" alt="Built on Arch" />
-  <img src="https://img.shields.io/badge/100%25_Local--First-3DA639?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="Local-First" />
-  <img src="https://img.shields.io/badge/License-GPL_3.0-blue?style=for-the-badge" alt="GPL-3.0" />
+  <strong>Your computer, as a conversation.</strong><br/>
+  <em>An open-source, AI-native operating system. Voice-first. Local-first. Yours.</em>
 </p>
 
 <p align="center">
-  <a href="#quick-start">Quick Start</a> •
-  <a href="#the-idea">The Idea</a> •
-  <a href="#how-it-works">How It Works</a> •
+  <img src="https://img.shields.io/badge/AI--Native-d1684e?style=for-the-badge&logo=linux&logoColor=white" alt="AI-Native" />
+  <img src="https://img.shields.io/badge/Written_in_Rust-000000?style=for-the-badge&logo=rust&logoColor=white" alt="Rust" />
+  <img src="https://img.shields.io/badge/Local--First-2a9d90?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="Local-First" />
+  <img src="https://img.shields.io/badge/Voice--First-e88c30?style=for-the-badge&logo=audacity&logoColor=white" alt="Voice-First" />
+  <img src="https://img.shields.io/badge/GPL_3.0-blue?style=for-the-badge" alt="GPL-3.0" />
+</p>
+
+<p align="center">
+  <a href="#what-is-os-1">What is this?</a> •
+  <a href="#how-it-feels">How it feels</a> •
   <a href="#architecture">Architecture</a> •
+  <a href="#quick-start">Quick Start</a> •
   <a href="#screenshots">Screenshots</a> •
   <a href="#roadmap">Roadmap</a> •
   <a href="#contributing">Contributing</a>
@@ -30,48 +29,38 @@
 
 ---
 
-## The Idea
+## What is OS 1?
 
-Every major OS today bolts AI on top of a 40-year-old desktop metaphor. Microsoft adds Copilot. Apple adds Siri. Google adds Gemini. Same old desktop, new sidebar.
+OS 1 is a different kind of operating system. There are no desktop icons. No start menus. No app launchers. When you turn on your computer, there is one thing: **a warm, conversational presence that listens, understands, and helps.**
 
-**IndOS is something different.**
-
-When you boot IndOS, there are no desktop icons. No start menus. No settings panels. There is one thing: **a surface that understands what you want and generates whatever you need, right now.**
+You talk to your computer. It talks back. It remembers what you were working on. It notices patterns. It generates whatever interface you need, right when you need it.
 
 ```
-Traditional:  Human → clicks icon → opens app → navigates menus → does thing
-AI-Assisted:  Human → opens assistant → types request → assistant helps with app
-IndOS:        Human → expresses intent → OS generates the right interface → done
+Traditional OS:  You click icons → open apps → navigate menus → do the thing
+OS 1:            You say what you need → it appears → done
 ```
 
-You don't use apps. You express intent. The OS figures out the rest.
+OS 1 is built entirely from open-source components. It runs locally on your machine — your voice, your data, your conversations never leave your device. It's written in Rust. It's built on Linux. And it's completely hackable.
 
-This is India's contribution to the next generation of computing — a **sovereign, open-source, AI-native operating system** written from the ground up in **Rust**. No C/C++ legacy. No patching decades-old code. A clean, memory-safe, blazing-fast foundation that runs locally, respects your privacy, and doesn't depend on any single corporation or cloud.
+**Think of it as a platform.** Drop in your own models, swap voice engines, build custom tools, reshape the experience. OS 1 is the foundation — what you build on it is yours.
+
+OpenClaw showed what happens when a personal AI agent is open-source, hackable, and runs on your own machine — people made it theirs. OS 1 is that moment, one level down: **not an agent running on your OS, but the OS itself.**
 
 ---
 
-## What Makes IndOS Different
+## How It Feels
 
-| | Traditional OS | AI-Assisted OS | IndOS |
-|---|---|---|---|
-| **Interface** | Windows, icons, menus | Same + chat sidebar | Conversation generates UI |
-| **AI Role** | None | Copilot / assistant | The AI **is** the shell |
-| **Data** | Local files + cloud sync | Cloud-dependent AI | 100% local inference |
-| **Privacy** | Varies | Data sent to cloud | PII never leaves device |
-| **Architecture** | C/C++ (1970s–90s) | Same + Python/JS AI | Rust from the ground up |
+OS 1 is inspired by the warmth and intimacy of conversational AI — a computer that feels less like a tool and more like a companion. This is the experience we're building toward:
 
----
+- **Morning.** You boot your machine. OS 1 greets you. "Good morning. You have a meeting at 10. That PR from last night got merged."
+- **Working.** "I need to fix the auth bug." OS 1 finds the repo, opens the files, dispatches an agent, shows you the diff. One tap to commit.
+- **Stuck.** "My disk is filling up." A treemap appears. Caches highlighted. "Clean" buttons next to each one.
+- **Curious.** "What was I working on last Tuesday?" OS 1 remembers. It shows you.
+- **Done.** "Play something chill." Minimal controls materialize. No app. Just music.
 
-## How It Works
+There are no applications in the traditional sense. OS 1 generates **fragments** — purpose-built interface components that appear when needed and fade when done.
 
-**Say what you need. IndOS makes it happen.**
-
-- *"Fix the auth bug in my project"* → IndOS finds the repo, opens relevant files, dispatches a coding agent, shows the diff. One tap to apply, test, commit.
-- *"My disk is filling up"* → Scans usage, renders a treemap, identifies caches and duplicates, each with a "Clean" button.
-- *"Show me system resources"* → A live system monitor fragment appears inline. No htop. No app.
-- *"Play something chill"* → Minimal media controls materialize. No music player. Just what you need.
-
-The OS doesn't open applications — it **generates fragments**: purpose-built UI components that appear when needed and disappear when done.
+**Where we are honestly:** v1 boots today — a conversational shell with voice in/out, 12 sandboxed system tools, agent dispatch, and a privacy filter, all running on local models. Generated fragments, persistent memory, and the proactive companion are v2, being built in the open. Boot the ISO and you get a real conversational OS, not the full movie — yet.
 
 ---
 
@@ -79,11 +68,11 @@ The OS doesn't open applications — it **generates fragments**: purpose-built U
 
 <table>
   <tr>
-    <td align="center"><img src="assets/boot.png" alt="IndOS Boot" width="380" /><br/><em>Custom bootloader with IndOS branding</em></td>
-    <td align="center"><img src="assets/desktop.png" alt="IndOS Desktop" width="380" /><br/><em>Generative Desktop with AI status bar</em></td>
+    <td align="center"><img src="assets/boot.png" alt="OS 1 Boot" width="380" /><br/><em>Boot screen</em></td>
+    <td align="center"><img src="assets/desktop.png" alt="OS 1 Desktop" width="380" /><br/><em>Generative Desktop</em></td>
   </tr>
   <tr>
-    <td align="center" colspan="2"><img src="assets/installer.png" alt="IndOS Installer" width="380" /><br/><em>Calamares installer with Niri tiling</em></td>
+    <td align="center" colspan="2"><img src="assets/installer.png" alt="OS 1 Installer" width="380" /><br/><em>Installing to disk</em></td>
   </tr>
 </table>
 
@@ -91,161 +80,92 @@ The OS doesn't open applications — it **generates fragments**: purpose-built U
 
 ## Architecture
 
-IndOS is a 10-layer stack, from bare metal to generative shell:
-
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│  GENERATIVE SHELL (Iced + Wayland layer-shell)                    │
-│  Conversation Canvas  │  Fragment Renderer  │  AI Status Bar      │
+│  GENERATIVE SHELL                                                 │
+│  Iced + Wayland layer-shell — voice input, fragment rendering     │
 ├──────────────────────────────────────────────────────────────────┤
 │  VOICE I/O                                                        │
-│  Faster-Whisper (STT)  │  Piper (TTS)  │  PipeWire               │
+│  Piper (TTS) │ Faster-Whisper (STT) │ OmniVoice-Studio (v2)      │
 ├──────────────────────────────────────────────────────────────────┤
 │  ORCHESTRATOR — The Brain                                         │
-│  Intent Router → Model Selection → Agent Dispatch → Tool Exec    │
-│  Session Persistence  │  Context Engine (LanceDB)                 │
+│  Intent → Model Selection → Agent Dispatch → Tool Execution      │
+│  Semantic memory across sessions (LanceDB → fast-mempalace v2)   │
 ├────────────┬────────────┬─────────────┬──────────────────────────┤
-│  MODEL     │  AGENT     │  MCP TOOLS  │  PRIVACY FILTER           │
-│  FABRIC    │  HARNESS   │  12 system  │  PII redaction            │
-│  Ollama    │  OpenCode  │  tools with │  before any API call      │
-│  llmfit    │  Claude    │  sandboxing │                            │
+│  LOCAL     │  AGENT     │  MCP TOOLS  │  PRIVACY FILTER           │
+│  MODELS    │  HARNESS   │  12 system  │  PII never leaves         │
+│  Ollama    │  OpenCode  │  tools with │  your device              │
+│  Any model │  Claude    │  sandboxing │                            │
 ├────────────┴────────────┴─────────────┴──────────────────────────┤
-│  CONTEXT ENGINE                                                    │
-│  LanceDB + nomic-embed-text  │  Semantic memory across sessions   │
+│  MEMORY                                                            │
+│  LanceDB + local embeddings — persistent, semantic, 100% local    │
+│  (fast-mempalace integration coming in v2)                         │
 ├──────────────────────────────────────────────────────────────────┤
-│  SECURITY ENGINE                                                   │
-│  Capability-based sandbox  │  Audit log  │  Path/command filtering│
+│  SECURITY                                                          │
+│  Capability sandbox │ Audit log │ Path/command filtering          │
 ├──────────────────────────────────────────────────────────────────┤
-│  FRAGMENT LIBRARY (A2UI)                                           │
-│  Terminal │ File Browser │ Code View │ Charts │ Markdown │ Forms  │
+│  DESKTOP                                                           │
+│  Niri (Wayland compositor) │ Waybar │ PipeWire │ NetworkManager   │
 ├──────────────────────────────────────────────────────────────────┤
-│  DESKTOP INTEGRATION                                               │
-│  Niri (compositor) │ Waybar │ SwayNC │ PipeWire │ NetworkManager  │
-├──────────────────────────────────────────────────────────────────┤
-│  LINUX — CachyOS kernel / BORE scheduler / x86-64-v3              │
+│  LINUX — CachyOS kernel / BORE scheduler                          │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Core Principles
+## What Makes OS 1 Different
 
-| Principle | What it means |
-|-----------|---------------|
-| 🇮🇳 **Sovereign** | Built in India. No vendor lock-in. No foreign cloud dependency for core functionality. |
-| 🤖 **AI-Native** | AI isn't a feature — it's the entire interface. The conversation is the OS. |
-| 🦀 **Written in Rust** | Memory-safe, blazing fast. Shell, orchestrator, and all core services in Rust. |
-| 🏠 **Local-First** | Works fully offline. Your data stays on your machine. Local models by default. |
-| 🛡️ **Privacy by Design** | PII never leaves your device. All API calls pass through a local privacy filter first. |
-| 🔓 **Open Source** | GPL-3.0. Every component is open. No proprietary dependencies required. |
-
----
-
-## Open-Source AI Stack
-
-IndOS runs entirely on open-source AI — no proprietary models required:
-
-| Layer | Technology | Role |
-|-------|-----------|------|
-| **Inference** | [Ollama](https://ollama.com) / llama.cpp | Local model serving, GPU management |
-| **Language Models** | Llama, Qwen, Gemma, DeepSeek, Phi | Conversation, reasoning, code generation |
-| **Embeddings** | nomic-embed-text | Semantic memory and vector search |
-| **Vector DB** | LanceDB | Embedded, zero-config — "SQLite for vectors" |
-| **Speech-to-Text** | Faster-Whisper | GPU-accelerated, ~100ms, fully offline |
-| **Text-to-Speech** | Piper | <100ms latency, CPU-only, offline |
-| **Vision** | Qwen2.5-VL | Desktop screenshot understanding |
-| **Model Selection** | llmfit | Hardware scan → optimal model recommendation |
-
-> **API keys are optional.** IndOS runs fully offline with local models. Add API keys for frontier models (Claude, GPT-4) when you want extra capability — all API calls pass through the local privacy filter first.
+| | Traditional OS | AI-Assisted OS | OS 1 |
+|---|---|---|---|
+| **Interface** | Windows, icons, menus | Same + chat sidebar | Voice → generated UI |
+| **AI role** | None | Copilot / assistant | The AI **is** the shell |
+| **Voice** | "Hey Siri" gimmick | Basic commands | Primary interaction mode |
+| **Memory** | None | Cloud-dependent | Local semantic memory |
+| **Data** | Cloud sync | Sent to APIs | Never leaves your machine |
+| **Hackability** | Closed | Plugin APIs | Fork it, reshape it, own it |
 
 ---
 
-## Project Structure
+## The Platform
 
-```
-IndOS/
-├── indos-orchestrator/      # 🧠 The Brain — intent routing, Ollama streaming, tool execution
-├── indos-shell/             # 🖥️  Generative shell — Iced 0.14 + Wayland layer-shell
-├── indos-context-engine/    # 🔍 LanceDB vector memory + Ollama embeddings
-├── indos-voice/             # 🎙️  Voice I/O — Faster-Whisper STT + Piper TTS
-├── indos-privacy/           # 🛡️  PII redaction filter
-├── indos-security/          # 🔒 Capability-based security engine + audit log
-├── indos-canvas/            # 🎨 Conversation rendering (shared types)
-├── indos-settings/          # ⚙️  Niri, Waybar, SwayNC default configs
-├── indos-iso/               # 📀 archiso profile → bootable Live ISO
-├── autotest/                # 🧪 QEMU-based automated test harness
-└── .github/workflows/       # 🔄 CI — automated ISO builds
-```
+OS 1 ships with a curated stack, but everything is swappable:
+
+| Layer | Ships today | Coming / swap in anything |
+|-------|---------|-------------------|
+| **Voice** | Piper (TTS) + Faster-Whisper (STT) | [OmniVoice-Studio](https://github.com/debpalash/OmniVoice-Studio) (v2), Bark, XTTS |
+| **Memory** | LanceDB + nomic-embed-text | [fast-mempalace](https://github.com/debpalash/fast-mempalace) (v2), ChromaDB, Qdrant |
+| **Models** | Ollama (qwen, llama, gemma) | Any GGUF, any API |
+| **Agents** | OpenCode, Claude Code | Codex CLI, custom agents |
+| **Compositor** | Niri | Hyprland, Sway, any Wayland WM |
+| **Browser** | Donut Browser | Firefox, Chromium |
 
 ---
 
 ## Quick Start
 
-### Try IndOS (Live USB)
+### Try OS 1 (Live USB)
 
 1. Download the latest ISO from [Releases](https://github.com/debpalash/IndOS/releases)
-2. Flash to USB: `sudo dd if=indos-*.iso of=/dev/sdX bs=4M status=progress`
+2. Flash to USB: `sudo dd if=os1-*.iso of=/dev/sdX bs=4M status=progress`
 3. Boot from USB
-4. Start talking to your OS
+4. Start talking
 
 ### Build from Source
 
 ```bash
-# Clone
 git clone https://github.com/debpalash/IndOS.git
 cd IndOS
 
-# Build the Rust crates
+# Build
 cargo build --release -p indos-orchestrator
 cargo build --release -p indos-shell
 
-# Build the bootable ISO (needs archiso + root)
+# Build bootable ISO (needs archiso + root)
 sudo ./indos-iso/build-iso.sh
 
-# Run automated tests against the ISO
+# Run automated tests
 python3 autotest/autotest.py
 ```
-
-### Prerequisites
-
-- Arch Linux or CachyOS host (for ISO builds)
-- Rust toolchain (stable, via rustup)
-- Ollama (for local AI inference)
-- archiso (`pacman -S archiso`) for ISO builds
-
----
-
-## MCP Tools
-
-The orchestrator exposes 12 tools to the LLM, all sandboxed by the Security Engine:
-
-| Tool | Description | Safety |
-|------|-------------|--------|
-| `list_files` | List directory contents | ✅ Read-only |
-| `read_file` | Read file contents (line-limited) | ✅ Read-only |
-| `write_file` | Write to file | ⚠️ Blocks system paths |
-| `run_command` | Execute shell command | ⚠️ Blocks destructive patterns |
-| `system_info` | CPU, RAM, disk, GPU, uptime | ✅ Read-only |
-| `search_files` | Find files by pattern | ✅ Read-only |
-| `package_manager` | Search, info, install, remove | 🔒 Install/remove needs confirmation |
-| `system_setting` | Volume, brightness control | ⚠️ Non-destructive |
-| `toggle_focus_mode` | Enable/disable DND | ✅ Safe |
-| `hw_info` | Detailed hardware diagnostics | ✅ Read-only |
-| `launch_installer` | Start Calamares installer | 🔒 Privileged |
-| `donut_fetch` | Fetch URL content | ⚠️ Network |
-
----
-
-## Model Routing
-
-The orchestrator auto-selects the best local model based on task complexity:
-
-| Task | Model Tier | Examples |
-|------|-----------|----------|
-| Quick chat / Q&A | Small (<2B) | `qwen2.5:0.5b`, `phi3:mini` |
-| Information / Reasoning | Medium (7–9B) | `qwen2.5:7b`, `llama3.1:8b` |
-| Coding | Code-specialized | `qwen2.5-coder:7b`, `codellama` |
-| Vision / GUI | Vision models | `qwen2.5-vl`, `UI-TARS` |
 
 ---
 
@@ -253,17 +173,15 @@ The orchestrator auto-selects the best local model based on task complexity:
 
 | Category | Technology |
 |----------|-----------|
-| **Language** | Rust (core OS), Python (STT/TTS), TypeScript (fragments) |
+| **Language** | Rust (core), Python (voice), TypeScript (fragments) |
 | **Base** | Arch Linux (CachyOS kernel, BORE scheduler) |
-| **Compositor** | Niri — Rust + Smithay, scrollable tiling Wayland |
-| **Shell** | Iced 0.14 + iced_layershell 0.18 (Wayland layer-shell) |
+| **Compositor** | Niri — scrollable tiling Wayland |
+| **Shell** | Iced 0.14 + Wayland layer-shell |
+| **Voice** | Piper (TTS) + Faster-Whisper (STT) — OmniVoice-Studio in v2 |
+| **Memory** | LanceDB + nomic-embed-text — fast-mempalace in v2 |
+| **Inference** | Ollama (fully offline) |
 | **Audio** | PipeWire |
-| **Display Manager** | greetd + tuigreet |
-| **Inference** | Ollama (local, fully offline) |
-| **Memory** | LanceDB + nomic-embed-text |
-| **Voice** | Faster-Whisper (STT) + Piper (TTS) |
 | **Protocol** | MCP / NDJSON over Unix socket |
-| **Packages** | pacman (Arch Linux) + AUR |
 
 ---
 
@@ -273,62 +191,45 @@ The orchestrator auto-selects the best local model based on task complexity:
 
 - [x] Orchestrator with intent classification and model routing
 - [x] Generative shell (Iced + Wayland layer-shell)
-- [x] Context engine with LanceDB semantic memory
 - [x] 12 MCP tools with security sandbox
-- [x] Voice pipeline (Faster-Whisper + Piper)
+- [x] Voice pipeline (STT + TTS)
 - [x] Privacy filter with PII redaction
-- [x] Session persistence across reboots
-- [x] Agent harness (OpenCode, Claude Code, Codex CLI)
-- [x] Bootable Live ISO with Calamares installer
-- [x] Custom bootloader branding
-- [x] AI-aware Waybar status bar
-- [x] QEMU-based automated test suite (22 stages)
-- [x] GitHub Actions CI for ISO builds
+- [x] Bootable Live ISO with installer
+- [x] Automated test suite (22 stages)
+- [x] CI/CD for ISO builds
 
-### 🔜 v2.0 — Intelligence
+### 🔜 v2.0 — Personality
 
-- [ ] A2UI fragment generation — LLM emits JSON, OS renders native UI
-- [ ] Screenpipe integration — 24/7 screen context for proactive assistance
-- [ ] llmfit — automatic model recommendation based on hardware scan
-- [ ] Proactive morning dashboard — OS generates daily briefing on boot
-- [ ] Multi-agent orchestration — parallel agent dispatch for complex tasks
-- [ ] Donut Browser integration — MCP-native browsing with per-profile isolation
+- [ ] HER-inspired warm UI theme (coral/amber palette)
+- [ ] OmniVoice-Studio integration — custom voice personalities
+- [ ] fast-mempalace integration — persistent semantic memory
+- [ ] Proactive assistant — morning briefing, pattern recognition
+- [ ] Voice-first interaction mode
+- [ ] Plymouth animated boot splash
 
-### 🔮 v3.0 — Autonomy
+### 🔮 v3.0 — Community
 
-- [ ] Self-healing system — OS detects and resolves its own failures
-- [ ] Workflow builder (Sim Studio) — visual agentic workflow designer
-- [ ] ARM64 / Apple Silicon support (Asahi Linux kernel)
-- [ ] Federated learning — opt-in distributed model improvement
-- [ ] IndOS App Store — community-built fragment marketplace
-- [ ] Multilingual voice — Hindi, Tamil, Telugu, Bengali, and 20+ Indian languages
-
----
-
-## The Name
-
-**IndOS** — **Ind**ia's **O**perating **S**ystem.
-
-Sovereign. Independent. Not owned by a corporation. Not locked to a cloud. Not dependent on any single AI provider.
-
-Built from India 🇮🇳, for the world 🌏.
+- [ ] Fragment marketplace — community-built UI components
+- [ ] Custom voice packs
+- [ ] Multi-agent orchestration
+- [ ] ARM64 support
+- [ ] Self-healing system diagnostics
+- [ ] Multilingual voice support
 
 ---
 
 ## Contributing
 
-We welcome contributions of all kinds — code, documentation, translations, testing, and ideas.
+OS 1 is a hackable platform. We welcome contributions of all kinds — code, voice packs, fragments, translations, and ideas.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and guidelines.
 
 ```bash
-# Fork → Clone → Branch → Code → PR
 git clone https://github.com/YOUR_USERNAME/IndOS.git
 cd IndOS
 git checkout -b feature/your-feature
-# Make changes
+# Make it yours
 git push origin feature/your-feature
-# Open a Pull Request
 ```
 
 ---
@@ -340,6 +241,6 @@ GPL-3.0 — See [LICENSE](LICENSE)
 ---
 
 <p align="center">
-  <sub>🇮🇳 A sovereign open-source project. Built with ❤️ in India.</sub><br/>
-  <sub>Star ⭐ this repo if you believe the desktop deserves to be reinvented.</sub>
+  <sub>An open-source project. Built with ❤️ in India.</sub><br/>
+  <sub>Star ⭐ if you believe the desktop deserves to feel human.</sub>
 </p>

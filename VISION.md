@@ -1,10 +1,10 @@
-# IndOS — India's Sovereign AI-First Operating System
+# OS 1 — India's Sovereign AI-First Operating System
 
 ## What ChatGPT Actually Did
 
 ChatGPT didn't invent LLMs. GPT-3 existed for 2 years before it. What ChatGPT did was **remove every barrier between a human and the machine's capability**. No API keys. No prompt engineering. No installation. You typed, it understood, it delivered. The interface was so simple it was invisible.
 
-That's what IndOS needs to be for the desktop.
+That's what OS 1 needs to be for the desktop.
 
 ---
 
@@ -22,7 +22,7 @@ Every company will ship those. Microsoft is doing Copilot+PC. Apple is doing App
 
 **The desktop metaphor dies. The conversation IS the operating system.**
 
-When you boot IndOS, there are no:
+When you boot OS 1, there are no:
 - Desktop icons
 - Start menus / app launchers
 - File manager windows
@@ -45,7 +45,7 @@ Human → clicks icon → opens app → navigates menus → finds feature → do
 Human → opens AI assistant → types request → AI helps with app → human uses app
 ```
 
-### IndOS (what nobody has built)
+### OS 1 (what nobody has built)
 ```
 Human → expresses intent → OS generates the right interface → thing is done
 ```
@@ -58,7 +58,7 @@ The difference is that **there is no "app" layer**. The OS observes your intent 
 
 ### Scenario 1: Morning
 
-You boot your machine. IndOS knows it's Monday 9am.
+You boot your machine. OS 1 knows it's Monday 9am.
 
 The screen shows:
 - Your calendar for today (3 meetings, first one in 45 mins)
@@ -73,7 +73,7 @@ You didn't ask for any of this. The OS generated this surface because it underst
 
 You say: "I need to fix the auth bug in the user service"
 
-IndOS:
+OS 1:
 1. Finds the repo (it knows your projects)
 2. Opens the relevant files in an inline code view
 3. Spins up an agent (Claude Code / OpenCode / Codex — whatever you've configured) pointed at the right context
@@ -86,7 +86,7 @@ When the agent suggests a fix, you see the diff right there. One tap to apply. O
 
 You say: "Design a logo for my new project, something minimal with a gradient"
 
-IndOS:
+OS 1:
 1. Generates options using a local Stable Diffusion model or API
 2. Renders them in a gallery view
 3. Each has "Refine", "Download", "Set as project icon" actions
@@ -96,7 +96,7 @@ IndOS:
 
 You say: "My disk is filling up, help me clean it"
 
-IndOS:
+OS 1:
 1. Scans disk usage
 2. Generates a treemap visualization showing what's taking space
 3. Identifies: old Docker images (12GB), build caches (8GB), duplicate downloads (3GB)
@@ -107,13 +107,13 @@ IndOS:
 
 You say: "Play something chill while I work"
 
-IndOS generates a minimal media control — album art, progress bar, skip button. That's it. No Spotify app. No music player window. Just the controls you need, where you need them, disappearing when you don't.
+OS 1 generates a minimal media control — album art, progress bar, skip button. That's it. No Spotify app. No music player window. Just the controls you need, where you need them, disappearing when you don't.
 
 ---
 
 ## The Three Modes of Interface
 
-IndOS generates interfaces in three modes based on context:
+OS 1 generates interfaces in three modes based on context:
 
 ### 1. Ambient Mode (passive)
 The screen shows contextually relevant information without being asked. Like a smart dashboard that knows what matters right now. Widgets appear and disappear based on time, activity, and learned behavior.
@@ -122,13 +122,13 @@ The screen shows contextually relevant information without being asked. Like a s
 You're talking to the machine. You express intent, it responds with generated UI + text. This is the primary interaction mode — everything from file management to coding to media to system config happens here.
 
 ### 3. Focus Mode (immersive)
-When you're deep in a task (coding, writing, designing), IndOS generates a full-screen focused workspace with only what's relevant. The conversation retreats to a subtle edge panel. No notifications, no distractions, just the work.
+When you're deep in a task (coding, writing, designing), OS 1 generates a full-screen focused workspace with only what's relevant. The conversation retreats to a subtle edge panel. No notifications, no distractions, just the work.
 
 ---
 
 ## The Agent Harness: Not One AI, An Orchestra
 
-This is where IndOS differs from every AI-powered product:
+This is where OS 1 differs from every AI-powered product:
 
 **It doesn't have ONE AI model. It has an agent orchestration layer that dispatches to the best tool for each job.**
 
@@ -158,10 +158,10 @@ Key agents in the harness:
 - **Claude Code**: Frontier reasoning. Complex refactors, large codebases, deep understanding.
 - **Codex CLI**: OpenAI's fast agent. Multi-file edits, quick iterations.
 - **Crush**: Charmbracelet's TUI agent. Session-based, LSP-aware, beautiful terminal UI.
-- **System Agent**: IndOS-native. Handles packages, services, network, hardware.
+- **System Agent**: OS 1-native. Handles packages, services, network, hardware.
 - **UI Agent**: Generates interface fragments. The core of the generative desktop.
 
-**The user never thinks about which agent to use.** IndOS routes automatically. Power users can pin preferences ("always use Claude Code for Rust projects").
+**The user never thinks about which agent to use.** OS 1 routes automatically. Power users can pin preferences ("always use Claude Code for Rust projects").
 
 ---
 
@@ -235,10 +235,10 @@ The critical insight: **the UI generation layer and intent understanding run loc
 ```bash
 curl -fsSL https://indos.dev/install | bash
 ```
-Installs on any Arch/CachyOS system. Adds the IndOS shell, agents, local models. Boots into IndOS mode next login. Can switch back to traditional desktop with a hotkey.
+Installs on any Arch/CachyOS system. Adds the OS 1 shell, agents, local models. Boots into OS 1 mode next login. Can switch back to traditional desktop with a hotkey.
 
 ### Phase 2: The ISO
-Bootable image. Insert USB, boot, experience IndOS immediately. First-boot experience IS the ChatGPT moment — the machine says hello and asks what you need.
+Bootable image. Insert USB, boot, experience OS 1 immediately. First-boot experience IS the ChatGPT moment — the machine says hello and asks what you need.
 
 ### Phase 3: The Platform
 OTA updates. Agent marketplace. Community-contributed UI fragments. Declarative system configuration managed through conversation.
@@ -261,7 +261,7 @@ OTA updates. Agent marketplace. Community-contributed UI fragments. Declarative 
 
 ## The Name
 
-**IndOS** — **Ind**ia's **O**perating **S**ystem.
+**OS 1** — **Ind**ia's **O**perating **S**ystem.
 
 India's sovereign, AI-first operating system. Built on Arch Linux and open-source generative AI.
 

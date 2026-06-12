@@ -1,4 +1,4 @@
-// IndOS Calamares Slideshow
+// OS 1 Calamares Slideshow
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -6,7 +6,7 @@ import QtQuick.Layouts 1.15
 Rectangle {
     id: root
     anchors.fill: parent
-    color: "#0d1117"
+    color: "#1a1210"
 
     property int currentSlide: 0
     property int slideCount: 4
@@ -26,19 +26,19 @@ Rectangle {
         spacing: 30
         width: parent.width * 0.7
 
-        // IndOS Logo Text
+        // OS 1 Logo Text
         Text {
             Layout.alignment: Qt.AlignHCenter
-            text: "IndOS"
+            text: "OS 1"
             font.pixelSize: 48
             font.bold: true
-            color: "#58a6ff"
+            color: "#d1684e"
         }
 
         // Subtitle
         Text {
             Layout.alignment: Qt.AlignHCenter
-            text: "The Generative Desktop"
+            text: "Your computer, as a conversation."
             font.pixelSize: 20
             color: "#8b949e"
         }
@@ -160,7 +160,7 @@ Rectangle {
                     width: currentSlide === index ? 24 : 8
                     height: 8
                     radius: 4
-                    color: currentSlide === index ? "#58a6ff" : "#30363d"
+                    color: currentSlide === index ? "#d1684e" : "#30363d"
                     Behavior on width { NumberAnimation { duration: 200 } }
                     Behavior on color { ColorAnimation { duration: 200 } }
                 }
@@ -170,7 +170,7 @@ Rectangle {
         // Progress hint
         Text {
             Layout.alignment: Qt.AlignHCenter
-            text: "Installing IndOS to your system..."
+            text: "Installing OS 1..."
             font.pixelSize: 14
             color: "#484f58"
             font.italic: true

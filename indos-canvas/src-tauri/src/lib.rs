@@ -394,7 +394,7 @@ fn parse_fragments(content: &str) -> Vec<UIFragment> {
 
 // ── System Prompt ──────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT: &str = r#"You are IndOS, an AI-first operating system assistant. You are the primary interface between the user and their computer.
+const SYSTEM_PROMPT: &str = r#"You are OS 1, an AI-first operating system assistant. You are the primary interface between the user and their computer.
 
 Your capabilities:
 - Help users manage files, applications, and system settings through natural conversation
@@ -457,5 +457,5 @@ pub fn run() {
             read_file_content,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running IndOS");
+        .expect("error while running OS 1");
 }

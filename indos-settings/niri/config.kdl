@@ -1,5 +1,5 @@
-// IndOS Niri configuration
-// Optimized for generative desktop — IndOS shell as primary surface
+// OS 1 Niri configuration
+// Optimized for generative desktop — OS 1 shell as primary surface
 // Niri docs: https://github.com/YaLTeR/niri/wiki/Configuration
 
 // === AUTO-START ===
@@ -51,7 +51,7 @@ layout {
     // Borders
     focus-ring {
         width 2
-        active-color "#7aa2f7"    // IndOS accent blue
+        active-color "#d1684e"    // OS 1 accent coral
         inactive-color "#414868"
     }
 
@@ -96,8 +96,8 @@ animations {
 }
 
 // === WINDOW RULES ===
-// IndOS shell runs as a layer-shell surface (not managed here)
-// These rules handle traditional apps launched via IndOS
+// OS 1 shell runs as a layer-shell surface (not managed here)
+// These rules handle traditional apps launched via OS 1
 
 window-rule {
     // Firefox gets generous space
@@ -124,12 +124,12 @@ window-rule {
 // === KEYBINDS ===
 binds {
     // Mod = Super key
-    // IndOS core binds
+    // OS 1 core binds
 
-    // Toggle IndOS shell overlay (the primary interaction)
+    // Toggle OS 1 shell overlay (the primary interaction)
     Mod+Space { spawn "indos-shell" "--toggle"; }
 
-    // Launch traditional apps via IndOS (speak or type)
+    // Launch traditional apps via OS 1 (speak or type)
     // But also keep classic launcher as fallback
     Mod+D { spawn "fuzzel"; }
 
@@ -171,7 +171,7 @@ binds {
     // Close window
     Mod+Q { close-window; }
 
-    // Quick terminal (also available as IndOS fragment)
+    // Quick terminal (also available as OS 1 fragment)
     Mod+Return { spawn "alacritty"; }
 
     // Screenshot
@@ -203,7 +203,7 @@ environment {
     // Allow software rendering (QEMU/VMs without GPU)
     WLR_RENDERER_ALLOW_SOFTWARE "1"
 
-    // IndOS orchestrator socket
+    // OS 1 orchestrator socket
     INDOS_ORCHESTRATOR_SOCKET "/run/indos/orchestrator.sock"
 }
 

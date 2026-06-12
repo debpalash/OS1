@@ -1,6 +1,6 @@
-/* IndOS Waybar Theme
- * Dark, glassmorphic aesthetic matching the generative desktop
- * Accent: #7aa2f7 (IndOS blue)
+/* OS 1 Waybar Theme
+ * Warm, intimate aesthetic inspired by HER
+ * Accent: #d1684e (OS 1 coral)
  */
 
 /* === GLOBAL === */
@@ -11,10 +11,10 @@
 }
 
 window#waybar {
-    background: rgba(26, 27, 38, 0.85);
+    background: rgba(40, 28, 25, 0.88);
     border-radius: 12px;
-    border: 1px solid rgba(122, 162, 247, 0.15);
-    color: #c0caf5;
+    border: 1px solid rgba(209, 104, 78, 0.15);
+    color: #f0e0d6;
 }
 
 /* Remove default button styling */
@@ -24,41 +24,41 @@ button {
     padding: 0 6px;
     margin: 4px 2px;
     background: transparent;
-    color: #c0caf5;
+    color: #f0e0d6;
     transition: all 0.2s ease;
 }
 
 button:hover {
-    background: rgba(122, 162, 247, 0.15);
-    color: #7aa2f7;
+    background: rgba(209, 104, 78, 0.15);
+    color: #d1684e;
 }
 
 /* === LEFT MODULES === */
 
-#custom-indos-logo {
-    color: #7aa2f7;
+#custom-os1-logo {
+    color: #d1684e;
     font-weight: 700;
     font-size: 14px;
     padding: 0 12px;
     margin-right: 4px;
 }
 
-#custom-indos-logo:hover {
-    color: #89b4fa;
+#custom-os1-logo:hover {
+    color: #e8845c;
 }
 
 #workspaces button {
     padding: 0 6px;
-    color: #565f89;
+    color: #8a7064;
 }
 
 #workspaces button.active {
-    color: #7aa2f7;
-    background: rgba(122, 162, 247, 0.1);
+    color: #d1684e;
+    background: rgba(209, 104, 78, 0.1);
 }
 
 #window {
-    color: #a9b1d6;
+    color: #d4b8a8;
     font-style: italic;
     padding: 0 8px;
 }
@@ -72,7 +72,7 @@ button:hover {
 }
 
 #custom-ai-status.idle {
-    color: #565f89;
+    color: #8a7064;
 }
 
 #custom-ai-status.thinking {
@@ -81,7 +81,7 @@ button:hover {
 }
 
 #custom-ai-status.streaming {
-    color: #7aa2f7;
+    color: #d1684e;
     animation: pulse 0.8s ease-in-out infinite alternate;
 }
 
@@ -95,7 +95,7 @@ button:hover {
 }
 
 #custom-voice-status.off {
-    color: #565f89;
+    color: #8a7064;
 }
 
 #custom-voice-status.listening {
@@ -104,7 +104,7 @@ button:hover {
 }
 
 #custom-voice-status.speaking {
-    color: #7aa2f7;
+    color: #d1684e;
 }
 
 #custom-voice-status.processing {
@@ -132,7 +132,7 @@ button:hover {
 }
 
 #custom-model-status {
-    color: #bb9af7;
+    color: #e0956a;
     padding: 0 8px;
     font-size: 12px;
 }
@@ -142,7 +142,7 @@ button:hover {
 }
 
 #pulseaudio.muted {
-    color: #565f89;
+    color: #8a7064;
 }
 
 #network {
@@ -181,7 +181,7 @@ button:hover {
 }
 
 #clock {
-    color: #7aa2f7;
+    color: #d1684e;
     font-weight: 600;
     padding: 0 10px;
 }

@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: no
 # SPDX-License-Identifier: CC0-1.0
 #
-# IndOS Calamares Branding
+# OS 1 Calamares Branding
 ---
 componentName: indos
 
@@ -20,13 +20,13 @@ sidebar: qml,bottom
 navigation: widget
 
 strings:
-    productName:         IndOS
-    shortProductName:    IndOS
+    productName:         OS 1
+    shortProductName:    OS 1
     version:             2026.05
     shortVersion:        2026.05
-    versionedName:       IndOS Generative Desktop
-    shortVersionedName:  IndOS
-    bootloaderEntryName: IndOS
+    versionedName:       OS 1
+    shortVersionedName:  OS 1
+    bootloaderEntryName: OS 1
     productUrl:          https://github.com/user/IndOS
     supportUrl:          https://github.com/user/IndOS/issues
     knownIssuesUrl:      https://github.com/user/IndOS/issues
@@ -41,7 +41,7 @@ style:
     SidebarBackground:        "#0d1117"
     SidebarText:              "#c9d1d9"
     SidebarTextCurrent:       "#0d1117"
-    SidebarBackgroundCurrent: "#58a6ff"
+    SidebarBackgroundCurrent: "#d1684e"
 
 slideshow:               "show.qml"
 

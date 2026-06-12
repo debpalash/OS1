@@ -1,10 +1,10 @@
 #!/bin/bash
-# IndOS ISO post-build script — runs inside the chroot during ISO build
-# CachyOS base with IndOS generative desktop
+# OS 1 ISO post-build script — runs inside the chroot during ISO build
+# CachyOS base with OS 1 desktop
 
 set -euo pipefail
 
-echo "[IndOS] Post-build customization starting..."
+echo "[OS 1] Post-build customization starting..."
 
 # NOTE: User creation is at the END of this script
 # so that /etc/skel is fully populated first.
@@ -55,7 +55,7 @@ mkdir -p /etc/systemd/user
 # Orchestrator service (starts with user session)
 cat > /etc/systemd/user/indos-orchestrator.service << 'EOF'
 [Unit]
-Description=IndOS Orchestrator
+Description=OS 1 Orchestrator
 After=default.target
 
 [Service]
@@ -93,11 +93,11 @@ systemctl --global enable ollama-user.service
 systemctl --global enable indos-orchestrator.service
 
 # === INSTALL VOICE PIPELINE DEPS ===
-echo "[IndOS] Installing voice pipeline..."
+echo "[OS 1] Installing voice pipeline..."
 pip install --break-system-packages faster-whisper 2>/dev/null || true
 # Piper: install from AUR or binary
 if ! command -v piper &>/dev/null; then
-    echo "[IndOS] Piper not available yet — will install on first boot"
+    echo "[OS 1] Piper not available yet — will install on first boot"
 fi
 
 # Ollama models will be pulled on first boot, not during ISO build
@@ -108,7 +108,7 @@ fi
 # Replace with subprocess-based wrapper that streams output and returns exit code
 UNPACKFS="/usr/lib/calamares/modules/unpackfs/main.py"
 if [ -f "$UNPACKFS" ] && grep -q 'host_env_process_output' "$UNPACKFS"; then
-    echo "[IndOS] Patching unpackfs for Python 3.14 compatibility..."
+    echo "[OS 1] Patching unpackfs for Python 3.14 compatibility..."
     cp "$UNPACKFS" "${UNPACKFS}.orig"
 
     # Create the patch as a separate file for readability
@@ -131,7 +131,7 @@ PYPATCH
     mv /tmp/unpackfs_patched.py "$UNPACKFS"
     # Replace all calls to host_env_process_output with our safe version
     sed -i 's|libcalamares\.utils\.host_env_process_output|_safe_process_output|g' "$UNPACKFS"
-    echo "[IndOS] unpackfs patched: streaming subprocess with exit code return"
+    echo "[OS 1] unpackfs patched: streaming subprocess with exit code return"
 fi
 
 # === SET BINARY PERMISSIONS ===
@@ -169,7 +169,7 @@ EOF
 # === SCREENPIPE CONFIG ===
 mkdir -p /usr/share/indos
 cat > /usr/share/indos/screenpipe.toml << 'EOF'
-# IndOS Screenpipe Config
+# OS 1 Screenpipe Config
 # Privacy-first, local-only
 
 [capture]
@@ -202,21 +202,21 @@ indos
 EOF
 
 cat > /etc/os-release << 'EOF'
-NAME="IndOS"
-PRETTY_NAME="IndOS Generative Desktop"
-ID=indos
+NAME="OS 1"
+PRETTY_NAME="OS 1"
+ID=os1
 ID_LIKE=arch cachyos
 BUILD_ID=rolling
 VARIANT="Generative Desktop"
 VARIANT_ID=desktop
 HOME_URL="https://github.com/debpalash/IndOS"
 DOCUMENTATION_URL="https://github.com/debpalash/IndOS/wiki"
-LOGO=indos-logo
+LOGO=os1-logo
 EOF
 
 # === DEFAULT SHELL CONFIG ===
 cat > /etc/skel/.zshrc << 'ZSHEOF'
-# IndOS default shell
+# OS 1 default shell
 eval "$(starship init zsh)"
 
 # Aliases
@@ -225,7 +225,7 @@ alias ll='ls -la'
 alias sysinfo='fastfetch'
 alias indos-status='echo '\''{"type":"status"}'\'' | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/indos/orchestrator.sock'
 
-# IndOS environment
+# OS 1 environment
 export EDITOR=nano
 export VISUAL=nano
 export TERM=foot
@@ -233,13 +233,13 @@ ZSHEOF
 
 # cachyos-calamares installs configs to /etc/calamares/ and /usr/share/calamares/
 # We keep CachyOS's battle-tested module configs and only override:
-#   1. settings.conf (switch to offline mode + IndOS branding)
-#   2. IndOS branding (alongside CachyOS branding)
+#   1. settings.conf (switch to offline mode + OS 1 branding)
+#   2. OS 1 branding (alongside CachyOS branding)
 #   3. Specific modules we need to customize (post-install, unpackfs, bootloader)
-echo "[IndOS] Installing Calamares config overlay..."
+echo "[OS 1] Installing Calamares config overlay..."
 
 # Debug: show what CachyOS installed
-echo "[IndOS] CachyOS Calamares configs found:"
+echo "[OS 1] CachyOS Calamares configs found:"
 [ -f /etc/calamares/settings.conf ] && echo "  /etc/calamares/settings.conf ✓" || echo "  /etc/calamares/settings.conf ✗"
 [ -d /usr/share/calamares/branding/cachyos ] && echo "  branding/cachyos ✓" || echo "  branding/cachyos ✗"
 echo "  $(find /etc/calamares/modules -name '*.conf' 2>/dev/null | wc -l) module configs in /etc/calamares/modules/"
@@ -249,13 +249,13 @@ echo "  $(find /usr/share/calamares/modules -maxdepth 1 -type d 2>/dev/null | wc
 cp -f /root/indos-calamares/settings.conf /etc/calamares/settings.conf
 cp -f /root/indos-calamares/settings.conf /usr/share/calamares/settings.conf 2>/dev/null || true
 
-# 2. Install IndOS branding (alongside CachyOS — don't remove CachyOS's)
+# 2. Install OS 1 branding (alongside CachyOS — don't remove CachyOS's)
 mkdir -p /etc/calamares/branding
 cp -rf /root/indos-calamares/branding/indos /etc/calamares/branding/
 mkdir -p /usr/share/calamares/branding
 cp -rf /root/indos-calamares/branding/indos /usr/share/calamares/branding/ 2>/dev/null || true
 
-# 3. Only override specific module configs that IndOS needs differently
+# 3. Only override specific module configs that OS 1 needs differently
 #    Keep CachyOS defaults for: partition, locale, keyboard, users, etc.
 for module_conf in shellprocess_indos.conf shellprocess_preinitcpio.conf \
                    unpackfs.conf bootloader.conf \
@@ -268,7 +268,7 @@ for module_conf in shellprocess_indos.conf shellprocess_preinitcpio.conf \
     fi
 done
 
-echo "[IndOS] Calamares overlay complete:"
+echo "[OS 1] Calamares overlay complete:"
 ls -la /etc/calamares/settings.conf
 ls -d /etc/calamares/branding/indos /usr/share/calamares/branding/indos 2>/dev/null
 
@@ -281,8 +281,8 @@ mkdir -p /etc/skel/.config/autostart
 cat > /etc/skel/.config/autostart/calamares.desktop << 'EOF'
 [Desktop Entry]
 Type=Application
-Name=Install IndOS
-Comment=Install IndOS Generative Desktop to disk
+Name=Install OS 1
+Comment=Install OS 1 to disk
 Exec=sh -c 'sleep 3 && sudo -E calamares'
 Icon=calamares
 Terminal=false
@@ -298,11 +298,11 @@ chmod +x /etc/skel/Desktop/calamares.desktop
 mkdir -p /usr/share/wayland-sessions
 cat > /usr/share/wayland-sessions/indos-niri.desktop << 'EOF'
 [Desktop Entry]
-Name=IndOS (Niri)
-Comment=IndOS Generative Desktop — Niri Compositor
+Name=OS 1 (Niri)
+Comment=OS 1 — Niri Compositor
 Exec=indos-session
 Type=Application
-DesktopNames=IndOS
+DesktopNames=OS 1
 EOF
 
 # === CREATE DEFAULT USER (must be AFTER skel is populated) ===
@@ -318,7 +318,7 @@ if [ -f /root/dev-ssh-key.pub ]; then
     cp /root/dev-ssh-key.pub /home/indos/.ssh/authorized_keys
     chmod 600 /home/indos/.ssh/authorized_keys
     chown -R indos:indos /home/indos/.ssh
-    echo "[IndOS] Dev SSH key injected for passwordless access"
+    echo "[OS 1] Dev SSH key injected for passwordless access"
 fi
 
-echo "[IndOS] Post-build complete. CachyOS base + IndOS generative desktop + Calamares installer."
+echo "[OS 1] Post-build complete. CachyOS base + OS 1 desktop + Calamares installer."

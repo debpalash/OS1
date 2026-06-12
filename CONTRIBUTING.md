@@ -1,10 +1,10 @@
-# Contributing to IndOS
+# Contributing to OS 1
 
-Thank you for your interest in contributing to IndOS — India's sovereign, AI-first operating system built on Arch Linux and open-source generative AI.
+Thank you for your interest in contributing to OS 1 — India's sovereign, AI-first operating system built on Arch Linux and open-source generative AI.
 
 ## Project Structure
 
-IndOS is organized as a multi-repo project. Each repository has a specific responsibility:
+OS 1 is organized as a multi-repo project. Each repository has a specific responsibility:
 
 - **Foundation repos** (kernel, iso, pkgbuilds, settings) — Follow Arch Linux packaging conventions
 - **AI layer repos** (shell, orchestrator, model-fabric, mcp-server, agent-harness) — Rust crates

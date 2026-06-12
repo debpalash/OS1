@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build IndOS ISO (CachyOS Base)
+# Build OS 1 ISO (CachyOS Base)
 #
 # Usage: sudo ./build-iso.sh [work-dir] [out-dir]
 #
@@ -19,7 +19,7 @@ WORK_DIR="${1:-${PROJECT_ROOT}/build/work}"
 OUT_DIR="${2:-${PROJECT_ROOT}/build/out}"
 
 echo "═══════════════════════════════════════════"
-echo " IndOS ISO Builder (CachyOS Base)"
+echo " OS 1 ISO Builder (CachyOS Base)"
 echo "═══════════════════════════════════════════"
 echo " Profile: $ISO_PROFILE"
 echo " Work:    $WORK_DIR"
@@ -175,8 +175,8 @@ fi
 
 echo ""
 echo "═══════════════════════════════════════════"
-echo " IndOS ISO built successfully!"
+echo " OS 1 ISO built successfully!"
 echo " Base:   CachyOS (x86-64-v3)"
 echo " Kernel: linux-cachyos (BORE)"
 echo "═══════════════════════════════════════════"
-ls -lh "$OUT_DIR"/indos-*.iso 2>/dev/null
+ls -lh "$OUT_DIR"/os1-*.iso 2>/dev/null

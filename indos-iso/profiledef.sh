@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# IndOS ISO Profile — CachyOS-based archiso
+# OS 1 ISO Profile — CachyOS-based archiso
 # Build: sudo bash ./indos-iso/build-iso.sh
 #
 # Base: CachyOS (linux-cachyos, BORE scheduler, x86-64-v3)
 # Filesystem: ext4 (universal, simple, fast)
-# Ships: Niri + IndOS shell + Ollama + voice pipeline + greetd
+# Ships: Niri + OS 1 shell + Ollama + voice pipeline + greetd
 
 set -euo pipefail
 
 # Profile metadata
-iso_name="indos"
-iso_label="INDOS_$(date +%Y%m%d)"
-iso_publisher="IndOS Project <https://github.com/debpalash/IndOS>"
-iso_application="IndOS Generative Desktop"
+iso_name="os1"
+iso_label="OS1_$(date +%Y%m%d)"
+iso_publisher="OS 1 Project <https://github.com/debpalash/IndOS>"
+iso_application="OS 1 Generative Desktop"
 iso_version="$(date +%Y.%m.%d)"
 install_dir="arch"
 buildmodes=('iso')
