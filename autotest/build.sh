@@ -12,7 +12,7 @@
 
 set -euo pipefail
 
-ROOT="/home/pal/Desktop/IndOS"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_DIR="$ROOT/test-logs"
 mkdir -p "$LOG_DIR"
 LOG="$LOG_DIR/build-$(date +%Y%m%d-%H%M%S).log"

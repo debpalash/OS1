@@ -1,0 +1,38 @@
+name: Build IndOS ISO
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-iso:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+      options: --privileged
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm archiso base-devel rust cargo findmnt git
+
+      - name: Build ISO
+        run: |
+          # We are running as root inside the archlinux container
+          # Set skip cargo flag to 0 so we actually build the rust binaries
+          export INDOS_SKIP_CARGO=0
+          bash autotest/build.sh --clean
+
+      - name: Upload ISO Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: indos-iso
+          path: build/out/*.iso
+          retention-days: 7

@@ -110,6 +110,9 @@ kpmcore
 ckbcomp
 libpwquality
 
+# Wayland text input (dictation)
+wtype
+
 # Utilities
 htop
 btop
@@ -122,3 +125,5 @@ vim
 unzip
 socat
 jq
+brightnessctl
+swaybg

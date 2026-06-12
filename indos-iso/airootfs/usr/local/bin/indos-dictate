@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+# indos-dictate — Push-to-talk dictation for IndOS
+#
+# Toggle-style: first call starts recording, second call stops and types.
+# Keybind: Mod+V (configured in niri config.kdl)
+#
+# Dependencies: pw-record (pipewire), wtype, jq, notify-send
+# STT backends: faster-whisper (preferred) or Ollama whisper endpoint
+
+set -euo pipefail
+
+LOCKFILE="/tmp/indos-dictate.lock"
+AUDIO_FILE="/tmp/indos-dictate-audio.wav"
+PID_FILE="/tmp/indos-dictate.pid"
+
+# --- Notification helpers ---
+notify_start() {
+    notify-send -u low -t 2000 -i audio-input-microphone \
+        "IndOS Dictation" "🎙️ Recording… press Mod+V to stop"
+}
+
+notify_stop() {
+    notify-send -u low -t 2000 -i audio-input-microphone \
+        "IndOS Dictation" "⏹️ Processing speech…"
+}
+
+notify_result() {
+    local text="$1"
+    if [ -z "$text" ]; then
+        notify-send -u normal -t 3000 -i dialog-warning \
+            "IndOS Dictation" "No speech detected"
+    else
+        local preview="${text:0:80}"
+        notify-send -u low -t 3000 -i dialog-information \
+            "IndOS Dictation" "✅ Typed: ${preview}"
+    fi
+}
+
+notify_error() {
+    notify-send -u critical -t 5000 -i dialog-error \
+        "IndOS Dictation" "❌ $1"
+}
+
+# --- STT backends ---
+
+# Try faster-whisper (local, fast, preferred)
+transcribe_faster_whisper() {
+    local wav_path="$1"
+    python3 -c "
+import sys, json
+from faster_whisper import WhisperModel
+model = WhisperModel('base', device='auto', compute_type='int8')
+segments, info = model.transcribe('${wav_path}', beam_size=5, vad_filter=True)
+text = ' '.join(s.text.strip() for s in segments)
+print(text)
+" 2>/dev/null
+}
+
+# Fallback: Ollama with whisper-compatible endpoint
+transcribe_ollama() {
+    local wav_path="$1"
+    # Ollama doesn't natively support audio transcription via REST,
+    # so we use the indos-voice Rust binary if available, otherwise
+    # base64-encode and attempt a multimodal model
+    if command -v indos-voice &>/dev/null; then
+        indos-voice transcribe "$wav_path" 2>/dev/null
+        return $?
+    fi
+    # Last resort: use whisper.cpp if available
+    if command -v whisper-cpp &>/dev/null; then
+        whisper-cpp -m /usr/share/whisper-cpp/models/ggml-base.bin \
+            -f "$wav_path" --output-txt --no-timestamps 2>/dev/null | \
+            tail -n +1 | tr -d '\n'
+        return $?
+    fi
+    return 1
+}
+
+transcribe() {
+    local wav_path="$1"
+    local result
+
+    # Try faster-whisper first
+    if python3 -c "import faster_whisper" &>/dev/null; then
+        result=$(transcribe_faster_whisper "$wav_path")
+        if [ $? -eq 0 ] && [ -n "$result" ]; then
+            echo "$result"
+            return 0
+        fi
+    fi
+
+    # Fallback
+    result=$(transcribe_ollama "$wav_path")
+    if [ $? -eq 0 ] && [ -n "$result" ]; then
+        echo "$result"
+        return 0
+    fi
+
+    return 1
+}
+
+# --- Main logic ---
+
+start_recording() {
+    # Clean up any stale audio
+    rm -f "$AUDIO_FILE"
+
+    # Start pw-record in background (16kHz mono WAV for whisper)
+    pw-record --rate 16000 --channels 1 --format s16 "$AUDIO_FILE" &
+    local rec_pid=$!
+    echo "$rec_pid" > "$PID_FILE"
+
+    # Create lockfile to signal "recording in progress"
+    touch "$LOCKFILE"
+
+    notify_start
+}
+
+stop_recording_and_type() {
+    # Stop recording
+    if [ -f "$PID_FILE" ]; then
+        local rec_pid
+        rec_pid=$(cat "$PID_FILE")
+        kill "$rec_pid" 2>/dev/null || true
+        # Give pw-record a moment to flush and close the file
+        sleep 0.3
+        rm -f "$PID_FILE"
+    fi
+
+    rm -f "$LOCKFILE"
+    notify_stop
+
+    # Verify we have audio
+    if [ ! -f "$AUDIO_FILE" ] || [ ! -s "$AUDIO_FILE" ]; then
+        notify_error "No audio recorded"
+        return 1
+    fi
+
+    # Transcribe
+    local text
+    text=$(transcribe "$AUDIO_FILE" 2>/dev/null) || true
+
+    # Clean up audio
+    rm -f "$AUDIO_FILE"
+
+    # Trim whitespace
+    text=$(echo "$text" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+    if [ -z "$text" ]; then
+        notify_result ""
+        return 0
+    fi
+
+    # Type the result into the focused window
+    wtype -- "$text"
+    notify_result "$text"
+}
+
+# --- Toggle ---
+
+if [ -f "$LOCKFILE" ]; then
+    stop_recording_and_type
+else
+    start_recording
+fi

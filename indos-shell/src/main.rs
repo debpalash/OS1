@@ -316,8 +316,42 @@ fn view(shell: &IndOSShell, _window: window::Id) -> Element<Message> {
         ]
         .padding(8);
 
+        // Check if we should render ambient mode
+        let is_ambient = shell.messages.len() <= 1 && shell.input.is_empty() && !shell.is_generating;
+
         // Main layout
-        let content = column![header, conversation, input].spacing(4);
+        let content: Element<Message> = if is_ambient {
+            // Ambient view
+            let time_text = text(chrono::Local::now().format("%H:%M").to_string())
+                .size(72)
+                .color(iced::Color::from_rgb(0.9, 0.9, 0.95));
+            let date_text = text(chrono::Local::now().format("%A, %B %d").to_string())
+                .size(24)
+                .color(iced::Color::from_rgb(0.6, 0.6, 0.7));
+            let greeting = text("Good to see you. How can I help?")
+                .size(18)
+                .color(iced::Color::from_rgb(0.5, 0.7, 0.9));
+
+            let ambient_center = column![
+                time_text,
+                date_text,
+                iced::widget::Space::new().height(Length::Fixed(40.0)),
+                greeting
+            ]
+            .align_x(iced::Alignment::Center)
+            .spacing(8);
+
+            let ambient_container = container(ambient_center)
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .center_x(Length::Fill)
+                .center_y(Length::Fill);
+
+            column![header, ambient_container, input].spacing(4).into()
+        } else {
+            // Chat view
+            column![header, conversation, input].spacing(4).into()
+        };
 
         container(content)
             .width(Length::Fill)

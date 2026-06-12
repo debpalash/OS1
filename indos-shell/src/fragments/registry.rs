@@ -10,6 +10,10 @@ use std::collections::HashMap;
 use super::system_monitor;
 use super::text_block;
 use super::terminal;
+use super::file_list;
+use super::code_view;
+use super::chart;
+use super::markdown;
 
 /// A2UI fragment descriptor from the orchestrator
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -41,6 +45,10 @@ pub enum FragmentType {
     TextBlock,
     SystemMonitor,
     Terminal,
+    FileList,
+    CodeView,
+    Chart,
+    Markdown,
 }
 
 impl FragmentRegistry {
@@ -52,6 +60,13 @@ impl FragmentRegistry {
         components.insert("sysmon".into(), FragmentType::SystemMonitor);
         components.insert("terminal".into(), FragmentType::Terminal);
         components.insert("term".into(), FragmentType::Terminal);
+        components.insert("file-list".into(), FragmentType::FileList);
+        components.insert("files".into(), FragmentType::FileList);
+        components.insert("code-view".into(), FragmentType::CodeView);
+        components.insert("code".into(), FragmentType::CodeView);
+        components.insert("chart".into(), FragmentType::Chart);
+        components.insert("markdown".into(), FragmentType::Markdown);
+        components.insert("md".into(), FragmentType::Markdown);
 
         Self { components }
     }
@@ -80,6 +95,18 @@ impl FragmentRegistry {
             }
             Some(FragmentType::Terminal) => {
                 terminal::render(&descriptor.props)
+            }
+            Some(FragmentType::FileList) => {
+                file_list::render(&descriptor.props)
+            }
+            Some(FragmentType::CodeView) => {
+                code_view::render(&descriptor.props)
+            }
+            Some(FragmentType::Chart) => {
+                chart::render(&descriptor.props)
+            }
+            Some(FragmentType::Markdown) => {
+                markdown::render(&descriptor.props)
             }
             None => {
                 // Unknown fragment — render a placeholder

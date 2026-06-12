@@ -189,9 +189,8 @@ binds {
     XF86AudioLowerVolume { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
     XF86AudioMute { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
 
-    // Voice toggle (IndOS voice pipeline)
-    // TODO: re-enable when indos-voice binary supports --toggle
-    // Mod+V { spawn "indos-voice" "--toggle"; }
+    // Dictation — push-to-talk (toggle: start recording / stop + type)
+    Mod+V { spawn "indos-dictate"; }
 }
 
 // === ENVIRONMENT ===

@@ -18,3 +18,7 @@ pub mod registry;
 pub mod system_monitor;
 pub mod text_block;
 pub mod terminal;
+pub mod file_list;
+pub mod code_view;
+pub mod chart;
+pub mod markdown;

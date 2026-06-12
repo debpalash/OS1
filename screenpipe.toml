@@ -1,0 +1,21 @@
+# IndOS Screenpipe Config
+# Privacy-first, local-only
+
+[capture]
+# Enable OCR for screen context queries
+ocr = true
+# Disable vision (saving images) by default to save disk space and improve privacy
+vision = false
+# Only capture audio when needed (currently disabled by default for privacy)
+audio = false
+
+[storage]
+# Retention: 24 hours (1 day)
+retention_days = 1
+# Local storage only
+cloud_sync = false
+
+[api]
+# Local REST API
+host = "127.0.0.1"
+port = 3030

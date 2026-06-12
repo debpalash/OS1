@@ -28,6 +28,7 @@ mod router;
 mod session;
 mod tools;
 mod tool_parser;
+mod niri;
 
 use anyhow::Result;
 use indos_context_engine::{ContextEngine, MemorySource, new_memory};

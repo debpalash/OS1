@@ -119,6 +119,60 @@ pub fn available_tools() -> Vec<ToolDefinition> {
                 "required": ["action"]
             }),
         },
+        ToolDefinition {
+            name: "screen_context".into(),
+            description: "Get recent screen OCR text from screenpipe (opt-in, only works if screenpipe service is running)".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Optional search query to filter OCR results"},
+                    "limit": {"type": "integer", "default": 5, "description": "Max number of recent captures to return"}
+                }
+            }),
+        },
+        ToolDefinition {
+            name: "monitor_info".into(),
+            description: "Get information about connected monitors and their resolutions using Niri IPC".into(),
+            parameters: serde_json::json!({"type": "object", "properties": {}}),
+        },
+        ToolDefinition {
+            name: "system_setting".into(),
+            description: "Control system settings (volume, brightness, wifi)".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "setting": {"type": "string", "enum": ["volume", "brightness", "wifi"]},
+                    "value": {"type": "string", "description": "e.g. '50%' for volume/brightness, 'on'/'off' for wifi"}
+                },
+                "required": ["setting", "value"]
+            }),
+        },
+        ToolDefinition {
+            name: "toggle_focus_mode".into(),
+            description: "Toggle do-not-disturb / focus mode and maximize current window".into(),
+            parameters: serde_json::json!({"type": "object", "properties": {}}),
+        },
+        ToolDefinition {
+            name: "hw_info".into(),
+            description: "Get detailed hardware info".into(),
+            parameters: serde_json::json!({"type": "object", "properties": {}}),
+        },
+        ToolDefinition {
+            name: "launch_installer".into(),
+            description: "Launch the OS installer GUI".into(),
+            parameters: serde_json::json!({"type": "object", "properties": {}}),
+        },
+        ToolDefinition {
+            name: "donut_fetch".into(),
+            description: "Fetch web content via Donut Browser MCP (simulated via curl)".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "url": {"type": "string"}
+                },
+                "required": ["url"]
+            }),
+        },
     ]
 }
 
@@ -148,6 +202,13 @@ pub async fn execute_tool(name: &str, args: &serde_json::Value) -> ToolResult {
         "system_info" => tool_system_info().await,
         "search_files" => tool_search_files(args).await,
         "package_manager" => tool_package_manager(args).await,
+        "screen_context" => tool_screen_context(args).await,
+        "monitor_info" => tool_monitor_info().await,
+        "system_setting" => tool_system_setting(args).await,
+        "toggle_focus_mode" => tool_toggle_focus_mode().await,
+        "hw_info" => tool_hw_info().await,
+        "launch_installer" => tool_launch_installer().await,
+        "donut_fetch" => tool_donut_fetch(args).await,
         _ => ToolResult {
             success: false,
             output: format!("Unknown tool: {}", name),
@@ -173,6 +234,13 @@ pub async fn execute_tool_checked(
         "run_command" => ("spawn", args["command"].as_str().unwrap_or("").to_string()),
         "package_manager" => ("spawn", format!("pacman {}", args["action"].as_str().unwrap_or(""))),
         "system_info" => ("read", "/proc".to_string()),
+        "screen_context" => ("read", "screenpipe:ocr".to_string()),
+        "monitor_info" => ("read", "niri".to_string()),
+        "system_setting" => ("spawn", args["setting"].as_str().unwrap_or("setting").to_string()),
+        "toggle_focus_mode" => ("spawn", "swaync".to_string()),
+        "hw_info" => ("spawn", "hwinfo".to_string()),
+        "launch_installer" => ("spawn", "calamares".to_string()),
+        "donut_fetch" => ("read", "web".to_string()),
         _ => {
             return ToolResult {
                 success: false,
@@ -518,5 +586,200 @@ async fn tool_package_manager(args: &serde_json::Value) -> ToolResult {
             output: format!("Package manager error: {}", e),
             fragment: None,
         },
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Screenpipe integration (opt-in screen context)
+// ═══════════════════════════════════════════════════════════════
+
+/// Screenpipe search API response structures
+#[derive(Debug, Deserialize)]
+struct ScreenpipeResponse {
+    data: Vec<ScreenpipeItem>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ScreenpipeItem {
+    content: ScreenpipeContent,
+}
+
+#[derive(Debug, Deserialize)]
+struct ScreenpipeContent {
+    text: String,
+    #[serde(default)]
+    app_name: String,
+    #[serde(default)]
+    window_name: String,
+    #[serde(default)]
+    timestamp: String,
+}
+
+async fn tool_screen_context(args: &serde_json::Value) -> ToolResult {
+    let query = args["query"].as_str().unwrap_or("");
+    let limit = args["limit"].as_u64().unwrap_or(5);
+
+    // Build request to screenpipe local API
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(5))
+        .build()
+        .unwrap_or_default();
+
+    let mut url = format!(
+        "http://localhost:3030/search?content_type=ocr&limit={}",
+        limit
+    );
+    if !query.is_empty() {
+        url.push_str(&format!("&q={}", urlencoding(query)));
+    }
+
+    let response = match client.get(&url).send().await {
+        Ok(resp) => resp,
+        Err(e) => {
+            let msg = if e.is_connect() {
+                "Screenpipe is not running. Enable it with: systemctl --user enable --now indos-screenpipe".to_string()
+            } else if e.is_timeout() {
+                "Screenpipe request timed out".to_string()
+            } else {
+                format!("Failed to connect to screenpipe: {}", e)
+            };
+            return ToolResult {
+                success: false,
+                output: msg,
+                fragment: None,
+            };
+        }
+    };
+
+    if !response.status().is_success() {
+        return ToolResult {
+            success: false,
+            output: format!("Screenpipe returned status {}", response.status()),
+            fragment: None,
+        };
+    }
+
+    match response.json::<ScreenpipeResponse>().await {
+        Ok(data) => {
+            if data.data.is_empty() {
+                return ToolResult {
+                    success: true,
+                    output: "No recent screen captures found.".into(),
+                    fragment: None,
+                };
+            }
+
+            let mut output = String::new();
+            for (i, item) in data.data.iter().enumerate() {
+                let c = &item.content;
+                output.push_str(&format!(
+                    "--- Capture {} [{}] {} / {} ---\n{}\n\n",
+                    i + 1,
+                    c.timestamp,
+                    c.app_name,
+                    c.window_name,
+                    c.text.chars().take(2000).collect::<String>(),
+                ));
+            }
+
+            ToolResult {
+                success: true,
+                output,
+                fragment: None,
+            }
+        }
+        Err(e) => ToolResult {
+            success: false,
+            output: format!("Failed to parse screenpipe response: {}", e),
+            fragment: None,
+        },
+    }
+}
+
+/// Minimal URL-encoding for the query parameter
+fn urlencoding(s: &str) -> String {
+    let mut result = String::with_capacity(s.len() * 2);
+    for ch in s.chars() {
+        match ch {
+            'A'..='Z' | 'a'..='z' | '0'..='9' | '-' | '_' | '.' | '~' => result.push(ch),
+            ' ' => result.push('+'),
+            _ => {
+                for byte in ch.to_string().as_bytes() {
+                    result.push_str(&format!("%{:02X}", byte));
+                }
+            }
+        }
+    }
+    result
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Niri IPC integration
+// ═══════════════════════════════════════════════════════════════
+
+async fn tool_monitor_info() -> ToolResult {
+    match crate::niri::NiriClient::list_outputs() {
+        Ok(data) => ToolResult {
+            success: true,
+            output: format!("Monitor Info:\n{}", serde_json::to_string_pretty(&data).unwrap_or_default()),
+            fragment: None,
+        },
+        Err(e) => ToolResult {
+            success: false,
+            output: format!("Failed to get monitor info: {}", e),
+            fragment: None,
+        },
+    }
+}
+
+async fn tool_system_setting(args: &serde_json::Value) -> ToolResult {
+    let setting = args["setting"].as_str().unwrap_or("");
+    let value = args["value"].as_str().unwrap_or("");
+    
+    let (cmd, cmd_args): (&str, Vec<&str>) = match setting {
+        "volume" => ("wpctl", vec!["set-volume", "@DEFAULT_AUDIO_SINK@", value]),
+        "brightness" => ("brightnessctl", vec!["set", value]),
+        "wifi" => ("nmcli", vec!["radio", "wifi", value]),
+        _ => return ToolResult { success: false, output: "Unknown setting".into(), fragment: None },
+    };
+    
+    match Command::new(cmd).args(&cmd_args).output().await {
+        Ok(out) => ToolResult { success: out.status.success(), output: String::from_utf8_lossy(&out.stdout).to_string(), fragment: None },
+        Err(e) => ToolResult { success: false, output: e.to_string(), fragment: None },
+    }
+}
+
+async fn tool_toggle_focus_mode() -> ToolResult {
+    match Command::new("swaync-client").arg("-t").output().await {
+        Ok(out) => {
+            let _ = Command::new("niri").args(["msg", "action", "maximize-window"]).output().await;
+            ToolResult { success: out.status.success(), output: "Focus mode toggled. Notification DND state changed and window maximized.".into(), fragment: None }
+        },
+        Err(e) => ToolResult { success: false, output: e.to_string(), fragment: None },
+    }
+}
+
+async fn tool_hw_info() -> ToolResult {
+    match Command::new("hwinfo").arg("--short").output().await {
+        Ok(out) => ToolResult { success: out.status.success(), output: String::from_utf8_lossy(&out.stdout).to_string(), fragment: None },
+        Err(e) => ToolResult { success: false, output: e.to_string(), fragment: None },
+    }
+}
+
+async fn tool_launch_installer() -> ToolResult {
+    match Command::new("calamares").spawn() {
+        Ok(_) => ToolResult { success: true, output: "Installer launched successfully.".into(), fragment: None },
+        Err(e) => ToolResult { success: false, output: format!("Failed to launch installer: {}", e), fragment: None },
+    }
+}
+
+async fn tool_donut_fetch(args: &serde_json::Value) -> ToolResult {
+    let url = args["url"].as_str().unwrap_or("");
+    match Command::new("curl").args(["-s", "-L", url]).output().await {
+        Ok(out) => {
+            let text = String::from_utf8_lossy(&out.stdout).chars().take(4000).collect::<String>();
+            ToolResult { success: out.status.success(), output: format!("Fetched URL content (truncated):\n{}", text), fragment: None }
+        },
+        Err(e) => ToolResult { success: false, output: e.to_string(), fragment: None },
     }
 }

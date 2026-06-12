@@ -1,0 +1,24 @@
+[Unit]
+Description=IndOS Screenpipe — opt-in 24/7 screen+audio capture with local OCR
+Documentation=https://github.com/mediar-ai/screenpipe
+After=graphical-session.target
+ConditionEnvironment=WAYLAND_DISPLAY
+
+[Service]
+Type=simple
+ExecStartPre=/usr/bin/mkdir -p %h/.local/share/indos/screenpipe
+ExecStart=/usr/bin/screenpipe --port 3030 --data-dir %h/.local/share/indos/screenpipe --local
+Restart=on-failure
+RestartSec=10
+
+# Security hardening
+ProtectSystem=strict
+ReadWritePaths=%h/.local/share/indos/screenpipe
+
+# Environment
+Environment=SCREENPIPE_CONFIG=/usr/share/indos/screenpipe.toml
+
+[Install]
+# NOT enabled by default — user must run: systemctl --user enable --now indos-screenpipe
+# This keeps screenpipe opt-in for privacy
+WantedBy=

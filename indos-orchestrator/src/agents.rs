@@ -12,6 +12,7 @@ use tokio::sync::mpsc;
 pub enum AgentKind {
     OpenCode,
     Claude,
+    SimStudio,
 }
 
 impl AgentKind {
@@ -19,6 +20,7 @@ impl AgentKind {
         match self {
             AgentKind::OpenCode => "opencode",
             AgentKind::Claude => "claude",
+            AgentKind::SimStudio => "sim-studio",
         }
     }
 
@@ -26,6 +28,7 @@ impl AgentKind {
         match self {
             AgentKind::OpenCode => vec!["--pipe".into(), message.into()],
             AgentKind::Claude => vec!["--print".into(), message.into()],
+            AgentKind::SimStudio => vec!["--run".into(), message.into()],
         }
     }
 }
@@ -49,6 +52,9 @@ pub async fn detect_agent() -> Option<AgentKind> {
     }
     if binary_exists("claude").await {
         return Some(AgentKind::Claude);
+    }
+    if binary_exists("sim-studio").await {
+        return Some(AgentKind::SimStudio);
     }
     None
 }
