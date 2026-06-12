@@ -27,20 +27,45 @@ impl TtsEngine {
         }
     }
 
-    /// Find piper binary
+    /// Find the piper TTS binary. `--help` must mention "model" — the
+    /// Arch `extra/piper` package is an unrelated gaming-mouse GUI, so a
+    /// bare existence check would latch onto the wrong tool.
     async fn find_piper() -> Option<String> {
-        // Check common locations
         for path in &["piper", "/usr/bin/piper", "/usr/local/bin/piper"] {
-            if Command::new(path)
-                .arg("--version")
-                .stdout(Stdio::null())
+            if let Ok(out) = Command::new(path)
+                .arg("--help")
+                .stdout(Stdio::piped())
                 .stderr(Stdio::null())
-                .status()
+                .output()
                 .await
-                .map(|s| s.success())
-                .unwrap_or(false)
             {
-                return Some(path.to_string());
+                if out.status.success()
+                    && String::from_utf8_lossy(&out.stdout).contains("--model")
+                {
+                    return Some(path.to_string());
+                }
+            }
+        }
+        None
+    }
+
+    /// Resolve a voice name like "en_US-lessac-medium" to its .onnx path.
+    /// Accepts an explicit path unchanged; otherwise searches the user's
+    /// data dir then the system voices baked into the ISO.
+    fn resolve_voice(voice: &str) -> Option<std::path::PathBuf> {
+        let p = std::path::Path::new(voice);
+        if p.extension().map(|e| e == "onnx").unwrap_or(false) && p.exists() {
+            return Some(p.to_path_buf());
+        }
+        let mut dirs_to_try = Vec::new();
+        if let Some(d) = dirs::data_dir() {
+            dirs_to_try.push(d.join("piper").join("voices"));
+        }
+        dirs_to_try.push(std::path::PathBuf::from("/usr/share/piper/voices"));
+        for dir in dirs_to_try {
+            let candidate = dir.join(format!("{voice}.onnx"));
+            if candidate.exists() {
+                return Some(candidate);
             }
         }
         None
@@ -61,14 +86,15 @@ impl TtsEngine {
             }
         }
 
-        // Check if voice model exists
-        let model_dir = dirs::data_dir()
-            .unwrap_or_else(|| std::path::PathBuf::from("."))
-            .join("piper")
-            .join("voices");
-
-        if !model_dir.exists() {
-            tracing::info!("Voice models dir not found, will download on first use");
+        match Self::resolve_voice(&self.voice) {
+            Some(path) => tracing::info!("Voice model: {}", path.display()),
+            None => tracing::warn!(
+                "Voice model '{}' not found in ~/.local/share/piper/voices \
+                 or /usr/share/piper/voices — synthesis will fail until it \
+                 is downloaded (python3 -m piper.download_voices {})",
+                self.voice,
+                self.voice
+            ),
         }
 
         self.ready = true;
@@ -80,10 +106,12 @@ impl TtsEngine {
     pub async fn synthesize_to_file(&self, text: &str, output_path: &str) -> Result<()> {
         let piper = self.piper_path.as_deref()
             .ok_or_else(|| anyhow::anyhow!("Piper not installed"))?;
+        let model = Self::resolve_voice(&self.voice)
+            .ok_or_else(|| anyhow::anyhow!("voice model '{}' not found", self.voice))?;
 
         let output = Command::new(piper)
             .args([
-                "--model", &self.voice,
+                "--model", &model.to_string_lossy(),
                 "--output_file", output_path,
                 "--length_scale", &format!("{:.2}", 1.0 / self.rate),
             ])

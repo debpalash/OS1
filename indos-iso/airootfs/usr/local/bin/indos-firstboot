@@ -1,5 +1,5 @@
 #!/bin/bash
-# IndOS First-Boot Welcome
+# OS 1 First-Boot Welcome
 # Shows a terminal-based welcome on first login after install.
 # Writes ~/.config/indos/setup-done when complete so it never runs again.
 
@@ -16,7 +16,7 @@ if [ -z "$_INDOS_FIRSTBOOT_INNER" ]; then
     # Wait briefly for Niri to be ready so foot can open a window
     sleep 2
     export _INDOS_FIRSTBOOT_INNER=1
-    exec foot --title "IndOS Setup" -e "$0"
+    exec foot --title "OS 1 Setup" -e "$0"
 fi
 
 # ---------------------------------------------------------------------------
@@ -34,11 +34,11 @@ clear_screen
 cat <<'EOF'
   ╔══════════════════════════════════════════════════╗
   ║                                                  ║
-  ║      Welcome to IndOS — The AI-First Desktop     ║
+  ║      Welcome to OS 1 — Your computer, as a conversation     ║
   ║                                                  ║
   ╚══════════════════════════════════════════════════╝
 
-  IndOS is a CachyOS-based Linux distribution built
+  OS 1 is a CachyOS-based Linux distribution built
   around an always-available AI assistant powered by
   local models via Ollama.
 
@@ -96,7 +96,7 @@ fi
 
 echo "  ── AI Model Setup ────────────────────────────────"
 echo
-echo "  IndOS uses Ollama to run a local AI model."
+echo "  OS 1 uses Ollama to run a local AI model."
 echo "  Recommended model for your hardware: $DEFAULT_MODEL"
 echo
 echo "  Options:"
@@ -139,7 +139,7 @@ clear_screen
 cat <<'EOF'
   ╔══════════════════════════════════════════════════╗
   ║                                                  ║
-  ║            Setup complete — enjoy IndOS!          ║
+  ║            Setup complete — welcome to OS 1.       ║
   ║                                                  ║
   ╚══════════════════════════════════════════════════╝
 

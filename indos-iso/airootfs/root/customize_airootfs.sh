@@ -115,9 +115,25 @@ systemctl --global enable indos-voiced.service
 # === INSTALL VOICE PIPELINE DEPS ===
 echo "[OS 1] Installing voice pipeline..."
 pip install --break-system-packages faster-whisper 2>/dev/null || true
-# Piper: install from AUR or binary
-if ! command -v piper &>/dev/null; then
-    echo "[OS 1] Piper not available yet — will install on first boot"
+# Piper TTS: the PyPI package ships the `piper` CLI (the Arch
+# `extra/piper` package is an unrelated mouse GUI — do not use it)
+pip install --break-system-packages piper-tts 2>/dev/null || true
+# Bake the default voice into the ISO so OS 1 can speak on first boot
+mkdir -p /usr/share/piper/voices
+if [ ! -f /usr/share/piper/voices/en_US-lessac-medium.onnx ]; then
+    python3 -m piper.download_voices --download-dir /usr/share/piper/voices \
+        en_US-lessac-medium 2>/dev/null || {
+        HF="https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/lessac/medium"
+        curl -fsSL -o /usr/share/piper/voices/en_US-lessac-medium.onnx \
+            "$HF/en_US-lessac-medium.onnx" || true
+        curl -fsSL -o /usr/share/piper/voices/en_US-lessac-medium.onnx.json \
+            "$HF/en_US-lessac-medium.onnx.json" || true
+    }
+fi
+if [ -f /usr/share/piper/voices/en_US-lessac-medium.onnx ]; then
+    echo "[OS 1] Voice model baked: en_US-lessac-medium"
+else
+    echo "[OS 1] WARNING: voice model download failed — OS 1 will be mute"
 fi
 
 # Ollama models will be pulled on first boot, not during ISO build

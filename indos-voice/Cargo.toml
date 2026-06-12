@@ -10,6 +10,10 @@ description = "IndOS voice I/O pipeline — local STT (Faster-Whisper) + TTS (Pi
 name = "indos-voiced"
 path = "src/main.rs"
 
+[[example]]
+name = "tts_smoke"
+path = "examples/tts_smoke.rs"
+
 [dependencies]
 # Audio I/O via PipeWire subprocesses (pw-record / pw-play)
 
