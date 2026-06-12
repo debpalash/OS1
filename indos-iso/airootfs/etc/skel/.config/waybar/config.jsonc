@@ -11,7 +11,7 @@
     "margin-right": 8,
 
     "modules-left": [
-        "custom/indos-logo",
+        "custom/os1-logo",
         "niri/workspaces",
         "niri/window"
     ],
@@ -35,7 +35,7 @@
 
     // === LEFT: OS 1 branding + Niri workspace/window ===
 
-    "custom/indos-logo": {
+    "custom/os1-logo": {
         "format": " OS 1",
         "tooltip": "OS 1",
         "on-click": "indos-shell --toggle"
