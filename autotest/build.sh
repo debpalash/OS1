@@ -33,6 +33,20 @@ case "$MODE" in
         # Only delete the squashfs + ISO, keep the pacstrap rootfs intact
         rm -f "$WORK"/iso/arch/x86_64/airootfs.sfs 2>/dev/null || true
         rm -f "$WORK"/iso/arch/x86_64/airootfs.sha512 2>/dev/null || true
+        # Drop mkarchiso's run-once stamps for everything downstream of
+        # the pacstrap, otherwise it skips those steps and ships a stale
+        # ISO (boot configs, squashfs, and the ISO image are all gated
+        # on these zero-byte stamp files in $WORK). Keep
+        # base._make_boot_on_iso9660: it copies kernel+initramfs out of
+        # airootfs /boot, which _cleanup_pacstrap_dir already purged —
+        # re-running it fails, and its outputs never change on a repack.
+        rm -f "$WORK"/base._make_bootmode_* \
+              "$WORK"/base._mkairootfs_squashfs \
+              "$WORK"/base._prepare_airootfs_image \
+              "$WORK"/iso._build_iso_image \
+              "$WORK"/build._build_buildmode_iso 2>/dev/null || true
+        # (restore in case an older quick run deleted it)
+        [ -d "$WORK" ] && touch "$WORK"/base._make_boot_on_iso9660 2>/dev/null || true
         # Delete the ISO lock so mkarchiso regenerates it
         rm -f "$WORK"/.lock* 2>/dev/null || true
         ;;

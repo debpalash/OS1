@@ -396,7 +396,15 @@ class Runner:
             time.sleep(2)
             self.shot("boot-menu")
 
-        if not s.wait_for(r"Loading /arch.*vmlinuz", timeout=60, flags=re.M | re.S):
+        # syslinux suppresses its "Loading ..." lines when the kernel
+        # cmdline contains "quiet" (which os1 uses for the plymouth
+        # splash), and plymouth.ignore-serial-consoles keeps boot
+        # details off ttyS0 entirely — so also accept the first
+        # kernel-side serial output: systemd's OSC context marker
+        # (\x1b]3008;), an [  OK  ] unit line, or the getty banner.
+        if not s.wait_for(r"(Loading /arch.*vmlinuz|type=boot|\[ *OK *\]|:: running early hook"
+                          r"|\]3008;|\w+ login:)",
+                          timeout=90, flags=re.M | re.S):
             self.shot("no-kernel-load")
             return self.stage("kernel-load", False, "kernel never loaded (menu stuck?)")
         self.stage("kernel-load", True)

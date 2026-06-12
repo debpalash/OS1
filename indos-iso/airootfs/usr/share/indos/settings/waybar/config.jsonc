@@ -1,4 +1,4 @@
-// IndOS Waybar Configuration
+// OS 1 Waybar Configuration
 // AI-aware status bar for the generative desktop
 // Integrates with: orchestrator, voice pipeline, model fabric, privacy filter
 {
@@ -11,7 +11,7 @@
     "margin-right": 8,
 
     "modules-left": [
-        "custom/indos-logo",
+        "custom/os1-logo",
         "niri/workspaces",
         "niri/window"
     ],
@@ -33,11 +33,11 @@
         "tray"
     ],
 
-    // === LEFT: IndOS branding + Niri workspace/window ===
+    // === LEFT: OS 1 branding + Niri workspace/window ===
 
-    "custom/indos-logo": {
-        "format": " IndOS",
-        "tooltip": "IndOS Generative Desktop",
+    "custom/os1-logo": {
+        "format": " OS 1",
+        "tooltip": "OS 1",
         "on-click": "indos-shell --toggle"
     },
 
