@@ -32,8 +32,18 @@ case "$1" in
         ;;
 
     voice-status)
-        # Check if voice pipeline is running
-        if pgrep -x "indos-voice" &>/dev/null; then
+        # indos-voiced writes its state (off|listening|processing|speaking)
+        # to a runtime file; fall back to a process check for old builds
+        VOICE_STATE_FILE="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/indos/voice.state"
+        if [ -f "$VOICE_STATE_FILE" ] && pgrep -x "indos-voiced" &>/dev/null; then
+            STATE=$(cat "$VOICE_STATE_FILE" 2>/dev/null)
+            case "$STATE" in
+                listening)  json_output "" "Voice: listening" "listening" ;;
+                processing) json_output "" "Voice: thinking" "processing" ;;
+                speaking)   json_output "" "Voice: speaking" "speaking" ;;
+                *)          json_output "" "Voice idle" "off" ;;
+            esac
+        elif pgrep -x "indos-voiced" &>/dev/null; then
             json_output "" "Voice active" "listening"
         else
             json_output "" "Voice off" "off"

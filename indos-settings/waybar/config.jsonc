@@ -88,7 +88,7 @@
             "processing": "󰔟"
         },
         "tooltip-format": "Voice: {}",
-        "on-click": "indos-voice --toggle"
+        "on-click": "pkill -USR1 -x indos-voiced"
     },
 
     // === RIGHT: Privacy + Model + System ===

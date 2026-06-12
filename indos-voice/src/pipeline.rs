@@ -87,7 +87,7 @@ impl Pipeline {
     }
 
     /// Send text to orchestrator and get full response
-    async fn send_to_orchestrator(&self, text: &str) -> Result<String> {
+    pub async fn send_to_orchestrator(&self, text: &str) -> Result<String> {
         let stream = UnixStream::connect(&self.socket_path).await?;
         let (reader, mut writer) = stream.into_split();
 

@@ -6,9 +6,12 @@ license = "GPL-3.0"
 authors = ["IndOS Contributors"]
 description = "IndOS voice I/O pipeline — local STT (Faster-Whisper) + TTS (Piper) + PipeWire"
 
+[[bin]]
+name = "indos-voiced"
+path = "src/main.rs"
+
 [dependencies]
-# Audio I/O
-cpal = "0.15"
+# Audio I/O via PipeWire subprocesses (pw-record / pw-play)
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }

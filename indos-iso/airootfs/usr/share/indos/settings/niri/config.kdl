@@ -129,6 +129,10 @@ binds {
     // Toggle OS 1 shell overlay (the primary interaction)
     Mod+Space { spawn "indos-shell" "--toggle"; }
 
+    // Voice hot window: the next thing you say is answered without the
+    // wake phrase (SIGUSR1 to indos-voiced). Dictation stays on Mod+V.
+    Mod+Shift+V { spawn "pkill" "-USR1" "-x" "indos-voiced"; }
+
     // Launch traditional apps via OS 1 (speak or type)
     // But also keep classic launcher as fallback
     Mod+D { spawn "fuzzel"; }

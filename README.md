@@ -200,12 +200,13 @@ python3 autotest/autotest.py
 
 ### 🔜 v2.0 — Personality
 
-- [ ] HER-inspired warm UI theme (coral/amber palette)
+- [x] HER-inspired warm UI theme (coral/amber palette)
+- [x] Plymouth animated boot splash — breathing coral ring, HER-style
+- [x] Voice-first interaction mode — `indos-voiced`: hands-free wake-phrase loop ("hey OS"), conversation window, push-to-talk (Mod+Shift+V)
+- [x] Proactive daily briefing — spoken greeting with system facts at first login of the day
 - [ ] OmniVoice-Studio integration — custom voice personalities
 - [ ] fast-mempalace integration — persistent semantic memory
-- [ ] Proactive assistant — morning briefing, pattern recognition
-- [ ] Voice-first interaction mode
-- [x] Plymouth animated boot splash — breathing coral ring, HER-style
+- [ ] Pattern recognition — ambient context for proactive help
 
 ### 🔮 v3.0 — Community
 

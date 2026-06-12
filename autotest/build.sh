@@ -58,12 +58,15 @@ esac
 # --- Cargo cache: skip rebuild if sources unchanged ---
 CARGO_HASH_FILE="$ROOT/build/.cargo_hash"
 CURRENT_HASH=$(find "$ROOT/indos-orchestrator/src" "$ROOT/indos-shell/src" \
+    "$ROOT/indos-voice/src" \
     "$ROOT/indos-orchestrator/Cargo.toml" "$ROOT/indos-shell/Cargo.toml" \
+    "$ROOT/indos-voice/Cargo.toml" \
     -newer "$CARGO_HASH_FILE" 2>/dev/null | head -1 || echo "changed")
 
 if [[ "$MODE" == "--quick" && -z "$CURRENT_HASH" && \
       -f "$ROOT/indos-orchestrator/target/release/indos-orchestrator" && \
-      -f "$ROOT/indos-shell/target/release/indos-shell" ]]; then
+      -f "$ROOT/indos-shell/target/release/indos-shell" && \
+      -f "$ROOT/indos-voice/target/release/indos-voiced" ]]; then
     echo "Cargo binaries up to date, skipping compile"
     export INDOS_SKIP_CARGO=1
 fi

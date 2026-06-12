@@ -87,10 +87,30 @@ RestartSec=5
 WantedBy=default.target
 EOF
 
+# Voice daemon — hands-free conversation loop + daily spoken briefing.
+# Idles gracefully (status "off") until faster-whisper/piper exist.
+# No After=indos-orchestrator: that creates an ordering cycle through
+# default.target (orchestrator is After=default.target); the daemon
+# connects to the orchestrator socket on demand and retries anyway.
+cat > /etc/systemd/user/indos-voiced.service << 'EOF'
+[Unit]
+Description=OS 1 Voice Daemon
+
+[Service]
+ExecStart=/usr/local/bin/indos-voiced
+Restart=on-failure
+RestartSec=5
+Environment=RUST_LOG=info
+
+[Install]
+WantedBy=default.target
+EOF
+
 # === ENABLE USER SERVICES GLOBALLY ===
 # --global enables for ALL users (works in chroot, unlike --user)
 systemctl --global enable ollama-user.service
 systemctl --global enable indos-orchestrator.service
+systemctl --global enable indos-voiced.service
 
 # === INSTALL VOICE PIPELINE DEPS ===
 echo "[OS 1] Installing voice pipeline..."

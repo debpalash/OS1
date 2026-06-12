@@ -80,15 +80,21 @@ else
         PID_ORCH=$!
         sudo -u "$SUDO_USER" bash -c "cd '$PROJECT_ROOT/indos-shell' && cargo build --release" &
         PID_SHELL=$!
+        sudo -u "$SUDO_USER" bash -c "cd '$PROJECT_ROOT/indos-voice' && cargo build --release" &
+        PID_VOICE=$!
         wait $PID_ORCH || { echo "ERROR: orchestrator build failed"; exit 1; }
         wait $PID_SHELL || { echo "ERROR: shell build failed"; exit 1; }
+        wait $PID_VOICE || { echo "ERROR: voice daemon build failed"; exit 1; }
     else
         (cd "$PROJECT_ROOT/indos-orchestrator" && cargo build --release) &
         PID_ORCH=$!
         (cd "$PROJECT_ROOT/indos-shell" && cargo build --release) &
         PID_SHELL=$!
+        (cd "$PROJECT_ROOT/indos-voice" && cargo build --release) &
+        PID_VOICE=$!
         wait $PID_ORCH || exit 1
         wait $PID_SHELL || exit 1
+        wait $PID_VOICE || exit 1
     fi
 fi
 
@@ -107,6 +113,12 @@ if [[ -f "$PROJECT_ROOT/indos-shell/target/release/indos-shell" ]]; then
        "$ISO_PROFILE/airootfs/usr/local/bin/"
 else
     echo "    WARNING: indos-shell binary not found, skipping"
+fi
+if [[ -f "$PROJECT_ROOT/indos-voice/target/release/indos-voiced" ]]; then
+    cp "$PROJECT_ROOT/indos-voice/target/release/indos-voiced" \
+       "$ISO_PROFILE/airootfs/usr/local/bin/"
+else
+    echo "    WARNING: indos-voiced binary not found, skipping"
 fi
 
 # Copy session script

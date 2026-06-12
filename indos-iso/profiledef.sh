@@ -32,6 +32,7 @@ rootfs_image_type="ext4"
 file_permissions=(
     ["/usr/local/bin/indos-orchestrator"]="0:0:755"
     ["/usr/local/bin/indos-shell"]="0:0:755"
+    ["/usr/local/bin/indos-voiced"]="0:0:755"
     ["/usr/local/bin/indos-session"]="0:0:755"
     ["/usr/local/bin/indos-preinitcpio-repair"]="0:0:755"
     ["/root/customize_airootfs.sh"]="0:0:755"

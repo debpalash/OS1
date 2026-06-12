@@ -12,6 +12,7 @@
 //!     → Response text → Piper (TTS) → Speaker
 //! ```
 
+pub mod audio;
 pub mod config;
 pub mod stt;
 pub mod tts;

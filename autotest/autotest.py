@@ -495,7 +495,8 @@ class Runner:
             last = out.strip().splitlines()[-1] if out.strip() else ""
             self.check(f"unit-{unit}", last == "active", last)
 
-        for binary in ("indos-orchestrator", "indos-shell", "indos-session"):
+        for binary in ("indos-orchestrator", "indos-shell", "indos-session",
+                       "indos-voiced"):
             rc, out = run(f"command -v {binary}", timeout=15)
             self.check(f"bin-{binary}", rc == 0, out.strip())
 
@@ -536,6 +537,10 @@ class Runner:
         self.check("proc-orchestrator", bool(out.strip()), out.strip(), required=False)
         rc, out = run("pgrep -af 'ollama serve' | head -3", timeout=15)
         self.check("proc-ollama", bool(out.strip()), out.strip(), required=False)
+        # voice daemon idles gracefully without STT/TTS deps, but the
+        # process itself must be up under the user session
+        rc, out = run("pgrep -ax indos-voiced | head -2", timeout=15)
+        self.check("proc-voiced", bool(out.strip()), out.strip(), required=False)
 
         if self.args.ai:
             self.ai_checks()
