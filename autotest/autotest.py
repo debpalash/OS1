@@ -409,7 +409,7 @@ class Runner:
         deadline = time.time() + self.args.timeout
         m = None
         while time.time() < deadline:
-            m = s.wait_for(r"(indos login:|archiso login:|root@[\w-]+|\[root@[\w-]+)",
+            m = s.wait_for(r"(os1 login:|indos login:|archiso login:|root@[\w-]+|\[root@[\w-]+)",
                            timeout=5)
             if m:
                 break
@@ -626,7 +626,8 @@ class Runner:
 
 
 def latest_iso() -> str | None:
-    isos = sorted(glob.glob(os.path.join(OUT_DIR, "indos-*.iso")),
+    isos = sorted(glob.glob(os.path.join(OUT_DIR, "os1-*.iso"))
+                  + glob.glob(os.path.join(OUT_DIR, "indos-*.iso")),
                   key=os.path.getmtime)
     return isos[-1] if isos else None
 

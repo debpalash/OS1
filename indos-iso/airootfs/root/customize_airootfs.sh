@@ -198,7 +198,7 @@ systemd-machine-id-setup 2>/dev/null || true
 
 # === BRANDING ===
 cat > /etc/hostname << 'EOF'
-indos
+os1
 EOF
 
 cat > /etc/os-release << 'EOF'

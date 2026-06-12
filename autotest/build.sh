@@ -76,7 +76,7 @@ fi
 mkdir -p "$ROOT/build"
 touch "$CARGO_HASH_FILE"
 
-ISO=$(ls -t "$ROOT"/build/out/indos-*.iso | head -1)
+ISO=$(ls -t "$ROOT"/build/out/*.iso | head -1)
 # Make artifacts readable/removable by the user
 chown "$(stat -c %U:%G "$ROOT")" "$ISO" "$LOG" 2>/dev/null || true
 echo "BUILD OK: $ISO (${ELAPSED}s)"
