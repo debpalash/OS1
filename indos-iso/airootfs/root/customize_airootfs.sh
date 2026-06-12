@@ -209,8 +209,8 @@ ID_LIKE=arch cachyos
 BUILD_ID=rolling
 VARIANT="Generative Desktop"
 VARIANT_ID=desktop
-HOME_URL="https://github.com/debpalash/IndOS"
-DOCUMENTATION_URL="https://github.com/debpalash/IndOS/wiki"
+HOME_URL="https://github.com/debpalash/OS1"
+DOCUMENTATION_URL="https://github.com/debpalash/OS1/wiki"
 LOGO=os1-logo
 EOF
 

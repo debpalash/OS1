@@ -145,7 +145,7 @@ OS 1 ships with a curated stack, but everything is swappable:
 
 ### Try OS 1 (Live USB)
 
-1. Download the latest ISO from [Releases](https://github.com/debpalash/IndOS/releases)
+1. Download the latest ISO from [Releases](https://github.com/debpalash/OS1/releases)
 2. Flash to USB: `sudo dd if=os1-*.iso of=/dev/sdX bs=4M status=progress`
 3. Boot from USB
 4. Start talking
@@ -153,8 +153,8 @@ OS 1 ships with a curated stack, but everything is swappable:
 ### Build from Source
 
 ```bash
-git clone https://github.com/debpalash/IndOS.git
-cd IndOS
+git clone https://github.com/debpalash/OS1.git
+cd OS1
 
 # Build
 cargo build --release -p indos-orchestrator
@@ -225,8 +225,8 @@ OS 1 is a hackable platform. We welcome contributions of all kinds — code, voi
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and guidelines.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/IndOS.git
-cd IndOS
+git clone https://github.com/YOUR_USERNAME/OS1.git
+cd OS1
 git checkout -b feature/your-feature
 # Make it yours
 git push origin feature/your-feature

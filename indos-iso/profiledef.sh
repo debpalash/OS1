@@ -11,7 +11,7 @@ set -euo pipefail
 # Profile metadata
 iso_name="os1"
 iso_label="OS1_$(date +%Y%m%d)"
-iso_publisher="OS 1 Project <https://github.com/debpalash/IndOS>"
+iso_publisher="OS 1 Project <https://github.com/debpalash/OS1>"
 iso_application="OS 1 Generative Desktop"
 iso_version="$(date +%Y.%m.%d)"
 install_dir="arch"
