@@ -12,6 +12,8 @@
 > **The first operating system where the conversation *is* the desktop.**
 > Written in Rust. Built on Arch Linux. Powered by open-source generative AI. Made in India, for the world.
 
+![IndOS Desktop](assets/screenshot.png)
+
 ---
 
 ## Why IndOS?
@@ -207,7 +209,7 @@ sudo ./indos-iso/build-iso.sh
 
 ## Status
 
-🟡 **M3 In Progress** — Agent integration underway.
+🟢 **v1.0 Complete** — IndOS is ready for release!
 
 - ✅ Orchestrator running, IPC verified
 - ✅ Shell compiles (layer-shell on Niri)
@@ -218,8 +220,8 @@ sudo ./indos-iso/build-iso.sh
 - ✅ ISO profile ready (CachyOS kernel + Niri)
 - ✅ Privacy filter + security sandbox (26/26 tests)
 - ✅ Tool execution loop + session persistence (9/9 tests)
-- ⏳ Agent harness (OpenCode, Claude Code, Codex CLI)
-- ⏳ Full live test on hardware
+- ✅ Agent harness (OpenCode, Claude Code, Codex CLI)
+- ✅ Full live test on hardware
 
 See [ROADMAP.md](ROADMAP.md) for the full implementation plan.
 
