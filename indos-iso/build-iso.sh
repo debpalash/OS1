@@ -43,6 +43,10 @@ echo ""
 echo "[0/5] Checking CachyOS keyring..."
 if ! pacman-key --list-keys | grep -q cachyos 2>/dev/null; then
     echo "Installing CachyOS keyring..."
+    # Fresh containers (e.g. CI) have no local signing key, so --lsign-key fails
+    # with "no secret key available to sign with". --init creates the master key
+    # and is a no-op on hosts whose keyring is already initialized.
+    pacman-key --init
     pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com
     pacman-key --lsign-key F3B607488DB35A47
     echo "NOTE: You may need CachyOS repos on your host. See: https://cachyos.org/docs/"
