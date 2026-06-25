@@ -1,0 +1,93 @@
+# cargo-deny configuration
+# https://embarkstudios.github.io/cargo-deny/
+#
+# This drives the `cargo-deny` job in .github/workflows/audit.yml. In CI we split
+# the checks into two groups:
+#   * advisories + bans + sources  -> BLOCKING (a failure fails the build)
+#   * licenses                     -> non-blocking for now (continue-on-error)
+#
+# The license check is advisory-only at first because this is a large transitive
+# tree (lancedb / arrow / iced / tauri) and a handful of crates ship non-SPDX or
+# dual licenses that need curating. We want the policy committed and visible
+# before we make it a hard gate. Tighten to blocking once the tree is clean.
+
+# ---------------------------------------------------------------------------
+# Advisories: known security vulnerabilities + unmaintained crates.
+# ---------------------------------------------------------------------------
+[advisories]
+version = 2
+# In config version 2, vulnerability and unsound advisories are *denied by
+# default* (they always error) -- that is what "deny known vulnerabilities"
+# means here; there is no separate field to set.
+# Unmaintained crates: fail for any crate in the tree, direct or transitive.
+unmaintained = "all"
+# Yanked crate versions should fail the build (default is only "warn").
+yanked = "deny"
+# Add specific RustSec advisory IDs here (with a comment + link) only when we
+# have consciously accepted the risk, e.g. ignore = ["RUSTSEC-0000-0000"].
+ignore = []
+
+# ---------------------------------------------------------------------------
+# Bans: dependency graph hygiene.
+# ---------------------------------------------------------------------------
+[bans]
+# Duplicate versions are extremely common in the arrow / iced / tauri trees, so
+# keep this a warning rather than a hard failure -- otherwise the (blocking)
+# bans check would fail on transitive version skew we cannot control.
+multiple-versions = "warn"
+# Wildcard ("*") version requirements are allowed; several upstream crates use
+# them internally and we do not want to gate on that.
+wildcards = "allow"
+# No crates are explicitly banned yet. Add to `deny` to forbid a crate outright.
+deny = []
+skip = []
+skip-tree = []
+
+# ---------------------------------------------------------------------------
+# Sources: where crates are allowed to come from.
+# ---------------------------------------------------------------------------
+# The lockfiles currently contain zero git-sourced dependencies, so we can keep
+# this strict: everything must come from the public crates.io registry.
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []
+
+# ---------------------------------------------------------------------------
+# Licenses: allowlist suitable for a GPL-3.0 project.
+# ---------------------------------------------------------------------------
+[licenses]
+version = 2
+# In config version 2 the old `unlicensed = "deny"` knob was removed: crates with
+# no detectable license are *denied by default*. So unlicensed crates already
+# fail this check (the v2 equivalent of `unlicensed = "deny"`); to permit one you
+# must add an explicit `clarify`/`exceptions` entry rather than silently allow it.
+confidence-threshold = 0.8
+# Permissive / weak-copyleft licenses that are compatible with shipping a
+# GPL-3.0 project, plus GPL-3.0 itself (all SPDX spellings of the workspace
+# crates' own license).
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception", # ring, wasi and friends in the Rust tree
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "Zlib",
+    "MPL-2.0",
+    "CC0-1.0",
+    "GPL-3.0",
+    "GPL-3.0-only",
+    "GPL-3.0-or-later",
+]
+# Per-crate exceptions: licenses we do NOT want to allow globally for a GPL-3.0
+# project, but which are acceptable for these specific (documented) crates.
+# `ring`/`openssl` bundle the historic OpenSSL license text alongside ISC/MIT.
+exceptions = [
+    { name = "ring", allow = ["OpenSSL"] },
+    { name = "openssl", allow = ["OpenSSL"] },
+    { name = "openssl-sys", allow = ["OpenSSL"] },
+]
