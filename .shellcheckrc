@@ -1,0 +1,10 @@
+# ShellCheck configuration for the OS 1 shell scripts.
+# Matches the CI `shellcheck` job (.github/workflows/ci.yml).
+
+# Follow `source`d files when the path is known.
+external-sources=true
+
+# Project-wide suppressions (style nits, not bugs):
+#   SC1091 — don't error when a sourced file isn't available at lint time.
+#   SC2155 — `local x=$(cmd)` masking return values; pervasive and intentional here.
+disable=SC1091,SC2155

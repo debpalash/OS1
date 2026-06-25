@@ -1,0 +1,5 @@
+# rustfmt configuration shared by every crate in the repo.
+# Kept to stable options that match the current formatting, so
+# `cargo fmt --all --check` (enforced in CI) stays meaningful and portable.
+edition = "2021"
+newline_style = "Unix"
