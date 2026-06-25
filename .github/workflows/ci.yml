@@ -1,0 +1,84 @@
+name: CI
+
+# Fast lint + test gate for the Rust workspace and shell scripts.
+# Runs on every push/PR. The heavy ISO build (build-iso.yml) is gated separately
+# so it does not run on every pull request.
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  rust:
+    name: fmt · clippy · test (workspace)
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install toolchain + build deps
+        run: |
+          pacman -Syu --noconfirm
+          # rust/cargo + native deps needed to build the workspace
+          # (lancedb/arrow pull in protobuf, cmake, clang).
+          pacman -S --noconfirm rust cargo base-devel cmake clang protobuf pkgconf openssl git
+
+      - name: Cache cargo + target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-
+
+      - name: Format check (workspace)
+        run: cargo fmt --all --check
+
+      - name: Format check (indos-shell)
+        run: cd indos-shell && cargo fmt --all --check
+
+      - name: Clippy (workspace, warnings = errors)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Test (workspace)
+        run: cargo test --workspace
+
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck (errors only)
+        # --severity=error keeps the gate focused on real bugs rather than
+        # style nits in the existing scripts. Tighten to "warning" later.
+        run: |
+          shellcheck --severity=error \
+            indos-dev \
+            indos-monitor \
+            autotest/*.sh \
+            indos-iso/build-iso.sh \
+            indos-iso/profiledef.sh \
+            indos-settings/session/indos-session.sh \
+            indos-settings/waybar/indos-waybar.sh \
+            test-harness/qemu-test.sh

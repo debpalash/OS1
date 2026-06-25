@@ -1,0 +1,28 @@
+name: Security Audit
+
+# Checks the dependency tree against the RustSec advisory database.
+# Runs weekly and on demand (not on every PR) so a freshly-published advisory
+# in a transitive dep surfaces without blocking day-to-day development.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "**/Cargo.toml"
+      - "**/Cargo.lock"
+
+jobs:
+  cargo-audit:
+    name: cargo audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run cargo-audit
+        uses: rustsec/audit-check@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
