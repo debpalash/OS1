@@ -14,9 +14,9 @@
 
 pub mod audio;
 pub mod config;
+pub mod pipeline;
 pub mod stt;
 pub mod tts;
-pub mod pipeline;
 
 pub use pipeline::{Pipeline, PipelineState};
 pub use stt::SttEngine;

@@ -12,7 +12,6 @@
 use anyhow::Result;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// Result of privacy filtering
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -74,6 +73,12 @@ pub struct PrivacyFilter {
     ready: bool,
 }
 
+impl Default for PrivacyFilter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PrivacyFilter {
     pub fn new() -> Self {
         let patterns = vec![
@@ -104,13 +109,17 @@ impl PrivacyFilter {
             // IP addresses (v4)
             PiiPattern {
                 entity_type: "IP_ADDRESS",
-                regex: Regex::new(r"\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b").unwrap(),
+                regex: Regex::new(
+                    r"\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b",
+                )
+                .unwrap(),
                 token_prefix: "[IP",
             },
             // API keys / tokens (long alphanumeric strings that look like secrets)
             PiiPattern {
                 entity_type: "API_KEY",
-                regex: Regex::new(r"(?:sk|pk|api|key|token|secret|password)[-_]?[a-zA-Z0-9]{20,}").unwrap(),
+                regex: Regex::new(r"(?:sk|pk|api|key|token|secret|password)[-_]?[a-zA-Z0-9]{20,}")
+                    .unwrap(),
                 token_prefix: "[KEY",
             },
             // Bearer tokens
@@ -194,7 +203,9 @@ impl PrivacyFilter {
         for pattern in &self.patterns {
             let matches: Vec<_> = pattern.regex.find_iter(text).collect();
             for m in matches {
-                let count = self.counter.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                let count = self
+                    .counter
+                    .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                 let token = format!("{}_{:03}]", pattern.token_prefix, count);
 
                 entities.push(RedactedEntity {
@@ -215,7 +226,11 @@ impl PrivacyFilter {
             tracing::info!(
                 "Privacy: redacted {} PII entities ({})",
                 entities.len(),
-                entities.iter().map(|e| e.entity_type.as_str()).collect::<Vec<_>>().join(", ")
+                entities
+                    .iter()
+                    .map(|e| e.entity_type.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")
             );
         }
 
@@ -248,7 +263,9 @@ mod tests {
     #[test]
     fn test_email_redaction() {
         let filter = PrivacyFilter::new();
-        let result = filter.filter("Contact me at john@example.com", PrivacyZone::Yellow).unwrap();
+        let result = filter
+            .filter("Contact me at john@example.com", PrivacyZone::Yellow)
+            .unwrap();
         assert!(result.had_pii);
         assert!(!result.sanitized_text.contains("john@example.com"));
         assert!(result.sanitized_text.contains("[EMAIL"));
@@ -259,7 +276,9 @@ mod tests {
     #[test]
     fn test_phone_redaction() {
         let filter = PrivacyFilter::new();
-        let result = filter.filter("Call me at 555-123-4567", PrivacyZone::Yellow).unwrap();
+        let result = filter
+            .filter("Call me at 555-123-4567", PrivacyZone::Yellow)
+            .unwrap();
         assert!(result.had_pii);
         assert!(!result.sanitized_text.contains("555-123-4567"));
     }
@@ -267,10 +286,12 @@ mod tests {
     #[test]
     fn test_api_key_redaction() {
         let filter = PrivacyFilter::new();
-        let result = filter.filter(
-            "My key is sk-abc123def456ghi789jkl012mno345",
-            PrivacyZone::Yellow,
-        ).unwrap();
+        let result = filter
+            .filter(
+                "My key is sk-abc123def456ghi789jkl012mno345",
+                PrivacyZone::Yellow,
+            )
+            .unwrap();
         assert!(result.had_pii);
         assert!(!result.sanitized_text.contains("sk-abc123"));
     }
@@ -278,7 +299,9 @@ mod tests {
     #[test]
     fn test_green_zone_passthrough() {
         let filter = PrivacyFilter::new();
-        let result = filter.filter("john@example.com", PrivacyZone::Green).unwrap();
+        let result = filter
+            .filter("john@example.com", PrivacyZone::Green)
+            .unwrap();
         assert!(!result.had_pii);
         assert_eq!(result.sanitized_text, "john@example.com");
     }
@@ -293,7 +316,9 @@ mod tests {
     #[test]
     fn test_de_redact() {
         let filter = PrivacyFilter::new();
-        let result = filter.filter("Email: pal@indos.dev", PrivacyZone::Yellow).unwrap();
+        let result = filter
+            .filter("Email: pal@indos.dev", PrivacyZone::Yellow)
+            .unwrap();
         let restored = filter.de_redact(&result.sanitized_text, &result.redacted_entities);
         assert!(restored.contains("pal@indos.dev"));
     }
@@ -301,10 +326,12 @@ mod tests {
     #[test]
     fn test_multiple_pii() {
         let filter = PrivacyFilter::new();
-        let result = filter.filter(
-            "Email john@test.com, phone 555-111-2222, SSN 123-45-6789",
-            PrivacyZone::Yellow,
-        ).unwrap();
+        let result = filter
+            .filter(
+                "Email john@test.com, phone 555-111-2222, SSN 123-45-6789",
+                PrivacyZone::Yellow,
+            )
+            .unwrap();
         assert!(result.had_pii);
         assert!(result.redacted_entities.len() >= 3);
         assert!(!result.sanitized_text.contains("john@test.com"));
@@ -314,7 +341,9 @@ mod tests {
     #[test]
     fn test_no_pii() {
         let filter = PrivacyFilter::new();
-        let result = filter.filter("Hello world, how are you?", PrivacyZone::Yellow).unwrap();
+        let result = filter
+            .filter("Hello world, how are you?", PrivacyZone::Yellow)
+            .unwrap();
         assert!(!result.had_pii);
         assert_eq!(result.sanitized_text, "Hello world, how are you?");
     }

@@ -70,22 +70,24 @@ impl SessionManager {
 
             // Auto-title from first user message
             if session.title.is_none() {
-                session.title = messages.iter()
-                    .find(|m| m.role == "user")
-                    .map(|m| {
-                        let title: String = m.content.chars().take(60).collect();
-                        if m.content.len() > 60 {
-                            format!("{}...", title)
-                        } else {
-                            title
-                        }
-                    });
+                session.title = messages.iter().find(|m| m.role == "user").map(|m| {
+                    let title: String = m.content.chars().take(60).collect();
+                    if m.content.len() > 60 {
+                        format!("{}...", title)
+                    } else {
+                        title
+                    }
+                });
             }
 
             let path = self.sessions_dir.join(format!("{}.json", session_id));
             let json = serde_json::to_string_pretty(&session)?;
             std::fs::write(&path, json)?;
-            tracing::debug!("Session saved: {} ({} messages)", session_id, messages.len());
+            tracing::debug!(
+                "Session saved: {} ({} messages)",
+                session_id,
+                messages.len()
+            );
         }
         Ok(())
     }
@@ -103,7 +105,11 @@ impl SessionManager {
             self.sessions.push(session);
         }
 
-        tracing::info!("Session loaded: {} ({} messages)", session_id, messages.len());
+        tracing::info!(
+            "Session loaded: {} ({} messages)",
+            session_id,
+            messages.len()
+        );
         Ok(messages)
     }
 
@@ -113,10 +119,10 @@ impl SessionManager {
         if let Ok(entries) = std::fs::read_dir(&self.sessions_dir) {
             let mut newest: Option<(PathBuf, std::time::SystemTime)> = None;
             for entry in entries.flatten() {
-                if entry.path().extension().map_or(false, |e| e == "json") {
+                if entry.path().extension().is_some_and(|e| e == "json") {
                     if let Ok(meta) = entry.metadata() {
                         if let Ok(modified) = meta.modified() {
-                            if newest.as_ref().map_or(true, |(_, t)| modified > *t) {
+                            if newest.as_ref().is_none_or(|(_, t)| modified > *t) {
                                 newest = Some((entry.path(), modified));
                             }
                         }
@@ -143,7 +149,7 @@ impl SessionManager {
         let mut sessions = Vec::new();
         if let Ok(entries) = std::fs::read_dir(&self.sessions_dir) {
             for entry in entries.flatten() {
-                if entry.path().extension().map_or(false, |e| e == "json") {
+                if entry.path().extension().is_some_and(|e| e == "json") {
                     if let Ok(json) = std::fs::read_to_string(entry.path()) {
                         if let Ok(session) = serde_json::from_str::<Session>(&json) {
                             sessions.push((session.id, session.title, session.message_count));
@@ -155,13 +161,76 @@ impl SessionManager {
         sessions
     }
 
+    // session accessors, part of the manager's public API surface, not yet wired up
+    #[allow(dead_code)]
     pub fn active_session(&self) -> Option<&Session> {
         self.active_session_id
             .as_ref()
             .and_then(|id| self.sessions.iter().find(|s| &s.id == id))
     }
 
+    #[allow(dead_code)]
     pub fn active_session_id(&self) -> Option<&str> {
         self.active_session_id.as_deref()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_session_serde_roundtrip() {
+        // Sessions are persisted as JSON and restored on reboot, so the
+        // round-trip must preserve all fields including the message history.
+        let now = Utc::now();
+        let session = Session {
+            id: "sess-123".to_string(),
+            title: Some("Greeting".to_string()),
+            created_at: now,
+            updated_at: now,
+            message_count: 2,
+            active: true,
+            messages: vec![
+                ChatMessage {
+                    role: "user".to_string(),
+                    content: "hi".to_string(),
+                },
+                ChatMessage {
+                    role: "assistant".to_string(),
+                    content: "hello".to_string(),
+                },
+            ],
+        };
+
+        let json = serde_json::to_string_pretty(&session).unwrap();
+        let back: Session = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(back.id, "sess-123");
+        assert_eq!(back.title.as_deref(), Some("Greeting"));
+        assert_eq!(back.message_count, 2);
+        assert!(back.active);
+        assert_eq!(back.messages.len(), 2);
+        assert_eq!(back.messages[0].role, "user");
+        assert_eq!(back.messages[1].content, "hello");
+    }
+
+    #[test]
+    fn test_session_with_no_title_serializes() {
+        let now = Utc::now();
+        let session = Session {
+            id: "sess-empty".to_string(),
+            title: None,
+            created_at: now,
+            updated_at: now,
+            message_count: 0,
+            active: false,
+            messages: Vec::new(),
+        };
+        let json = serde_json::to_string(&session).unwrap();
+        let back: Session = serde_json::from_str(&json).unwrap();
+        assert!(back.title.is_none());
+        assert!(back.messages.is_empty());
+        assert!(!back.active);
     }
 }

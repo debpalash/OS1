@@ -2,7 +2,7 @@
 # Root build wrapper for the autonomous loop.
 # Installed in sudoers (NOPASSWD) so the agent can rebuild without a human.
 #
-# Usage: sudo /home/pal/Desktop/IndOS/autotest/build.sh [--clean|--quick]
+# Usage: sudo ./autotest/build.sh [--clean|--quick]   (run from the repo root)
 #
 #   --clean   Wipe work dir, full rebuild (~5-10 min)
 #   --quick   Skip pacstrap if packages unchanged, only repack airootfs (~1-2 min)

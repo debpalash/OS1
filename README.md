@@ -156,9 +156,11 @@ OS 1 ships with a curated stack, but everything is swappable:
 git clone https://github.com/debpalash/OS1.git
 cd OS1
 
-# Build
+# Build everything in the Cargo workspace
+cargo build --release --workspace
+
+# ...or a single crate
 cargo build --release -p indos-orchestrator
-cargo build --release -p indos-shell
 
 # Build bootable ISO (needs archiso + root)
 sudo ./indos-iso/build-iso.sh

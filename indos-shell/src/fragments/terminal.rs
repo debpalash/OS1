@@ -18,19 +18,11 @@ pub fn render<'a, M: 'a + Clone>(props: &serde_json::Value) -> Element<'a, M> {
         .and_then(|v| v.as_str())
         .unwrap_or("(no command)");
 
-    let output = props
-        .get("output")
-        .and_then(|v| v.as_str())
-        .unwrap_or("");
+    let output = props.get("output").and_then(|v| v.as_str()).unwrap_or("");
 
-    let exit_code = props
-        .get("exit_code")
-        .and_then(|v| v.as_i64());
+    let exit_code = props.get("exit_code").and_then(|v| v.as_i64());
 
-    let cwd = props
-        .get("cwd")
-        .and_then(|v| v.as_str())
-        .unwrap_or("~");
+    let cwd = props.get("cwd").and_then(|v| v.as_str()).unwrap_or("~");
 
     // Header: prompt line
     let prompt = format!("{}$ {}", cwd, command);
@@ -41,11 +33,9 @@ pub fn render<'a, M: 'a + Clone>(props: &serde_json::Value) -> Element<'a, M> {
         None => iced::Color::from_rgb(0.5, 0.5, 0.55),
     };
 
-    let mut col = column![
-        text(prompt)
-            .size(13)
-            .color(iced::Color::from_rgb(0.4, 0.8, 0.4)),
-    ]
+    let mut col = column![text(prompt)
+        .size(13)
+        .color(iced::Color::from_rgb(0.4, 0.8, 0.4)),]
     .spacing(4)
     .padding(12)
     .width(Length::Fill);

@@ -1,0 +1,148 @@
+name: CI
+
+# Fast lint + test gate for the Rust workspace and shell scripts.
+# Runs on every push/PR. The heavy ISO build (build-iso.yml) is gated separately
+# so it does not run on every pull request.
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  rust:
+    name: fmt · clippy · test (workspace)
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install toolchain + build deps
+        run: |
+          pacman -Syu --noconfirm
+          # rust/cargo + native deps needed to build the workspace
+          # (lancedb/arrow pull in protobuf, cmake, clang).
+          pacman -S --noconfirm rust cargo base-devel cmake clang protobuf pkgconf openssl git
+
+      - name: Cache cargo + target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-
+
+      - name: Format check (workspace)
+        run: cargo fmt --all --check
+
+      - name: Format check (indos-shell)
+        run: cd indos-shell && cargo fmt --all --check
+
+      - name: Clippy (workspace, warnings = errors)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Test (workspace)
+        run: cargo test --workspace
+
+  gui:
+    # Compile coverage for the two GUI frontends, which live OUTSIDE the shared
+    # Cargo workspace and were previously never built in CI (so they could break
+    # silently). Built on an Arch container because both target Arch system libs.
+    name: build · clippy (GUI crates)
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install toolchain + GUI system deps
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm \
+            rust cargo base-devel clang pkgconf openssl git \
+            `# indos-shell: iced + Wayland + layer-shell + vulkan/GL + fonts` \
+            wayland wayland-protocols libxkbcommon mesa vulkan-icd-loader \
+            fontconfig freetype2 \
+            `# indos-canvas: Tauri v2 (webkit) + tray + svg + JS toolchain` \
+            webkit2gtk-4.1 gtk3 libappindicator-gtk3 librsvg \
+            nodejs npm
+
+      # Cache the cargo registry and both GUI target dirs. Keyed on the GUI
+      # lockfiles/manifests so the cache busts when their deps change. (Canvas's
+      # src-tauri has no committed Cargo.lock yet, so we key on its Cargo.toml.)
+      - name: Cache cargo + GUI target dirs
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            indos-shell/target
+            indos-canvas/src-tauri/target
+          key: gui-${{ runner.os }}-${{ hashFiles('indos-shell/Cargo.lock', 'indos-canvas/src-tauri/Cargo.toml', 'indos-canvas/package.json') }}
+          restore-keys: gui-${{ runner.os }}-
+
+      # --- indos-shell (iced / Wayland) ---------------------------------------
+      # Real gates: the binary must build and be clippy-clean.
+      - name: Build indos-shell
+        run: cd indos-shell && cargo build
+
+      - name: Clippy indos-shell (warnings = errors)
+        run: cd indos-shell && cargo clippy --all-targets -- -D warnings
+
+      # --- indos-canvas (Tauri v2) --------------------------------------------
+      # `npm install` rather than `npm ci`: there is no committed package-lock.json
+      # in indos-canvas/ yet, and `npm ci` requires a lockfile.
+      - name: Install JS deps (indos-canvas)
+        run: cd indos-canvas && npm install
+
+      # Real gate: the Tauri Rust crate must compile against the webkit deps.
+      # (We build the Rust side directly rather than a full `tauri build` bundle,
+      # which is heavier and more fragile in CI.)
+      - name: Build indos-canvas (src-tauri)
+        run: cd indos-canvas/src-tauri && cargo build
+
+      # Non-blocking: surface lint issues without gating, since the canvas crate
+      # is not yet clippy-clean. Promote to a hard gate once it is.
+      - name: Clippy indos-canvas (non-blocking)
+        continue-on-error: true
+        run: cd indos-canvas/src-tauri && cargo clippy --all-targets -- -D warnings
+
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck (errors only)
+        # --severity=error keeps the gate focused on real bugs rather than
+        # style nits in the existing scripts. Tighten to "warning" later.
+        run: |
+          shellcheck --severity=error \
+            indos-dev \
+            indos-monitor \
+            autotest/*.sh \
+            indos-iso/build-iso.sh \
+            indos-iso/profiledef.sh \
+            indos-settings/session/indos-session.sh \
+            indos-settings/waybar/indos-waybar.sh \
+            test-harness/qemu-test.sh

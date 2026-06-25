@@ -74,9 +74,7 @@ pub enum OrchestratorMessage {
 
     /// List of saved sessions
     #[serde(rename = "session_list")]
-    SessionList {
-        sessions: Vec<SessionInfo>,
-    },
+    SessionList { sessions: Vec<SessionInfo> },
 }
 
 /// Session metadata sent to the shell
@@ -210,10 +208,13 @@ async fn handle_connection(
 }
 
 /// IPC client (used by indos-shell to connect to orchestrator)
+// part of the public API surface consumed by indos-shell, not wired up in-workspace
+#[allow(dead_code)]
 pub struct IpcClient {
     socket_path: PathBuf,
 }
 
+#[allow(dead_code)]
 impl IpcClient {
     pub fn new() -> Self {
         Self {
@@ -228,10 +229,7 @@ impl IpcClient {
     }
 
     /// Send a message and receive streaming responses
-    pub async fn send(
-        &self,
-        msg: &ShellMessage,
-    ) -> Result<mpsc::Receiver<OrchestratorMessage>> {
+    pub async fn send(&self, msg: &ShellMessage) -> Result<mpsc::Receiver<OrchestratorMessage>> {
         let stream = UnixStream::connect(&self.socket_path).await?;
         let (reader, mut writer) = stream.into_split();
 
@@ -269,5 +267,137 @@ impl IpcClient {
         });
 
         Ok(rx)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_shell_chat_message_tag_and_roundtrip() {
+        let msg = ShellMessage::Chat {
+            content: "hello".to_string(),
+            session_id: Some("abc".to_string()),
+        };
+        let json = serde_json::to_string(&msg).unwrap();
+        // The internally-tagged enum must emit a "type" discriminator the
+        // shell relies on for framing.
+        assert!(json.contains("\"type\":\"chat\""));
+        assert!(json.contains("\"content\":\"hello\""));
+
+        let back: ShellMessage = serde_json::from_str(&json).unwrap();
+        match back {
+            ShellMessage::Chat {
+                content,
+                session_id,
+            } => {
+                assert_eq!(content, "hello");
+                assert_eq!(session_id.as_deref(), Some("abc"));
+            }
+            other => panic!("wrong variant: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_shell_chat_message_null_session_id() {
+        // session_id is optional; the shell may omit it.
+        let parsed: ShellMessage =
+            serde_json::from_str(r#"{"type":"chat","content":"hi"}"#).unwrap();
+        match parsed {
+            ShellMessage::Chat {
+                content,
+                session_id,
+            } => {
+                assert_eq!(content, "hi");
+                assert!(session_id.is_none());
+            }
+            other => panic!("wrong variant: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_shell_unit_variants_parse() {
+        assert!(matches!(
+            serde_json::from_str::<ShellMessage>(r#"{"type":"status"}"#).unwrap(),
+            ShellMessage::Status
+        ));
+        assert!(matches!(
+            serde_json::from_str::<ShellMessage>(r#"{"type":"cancel"}"#).unwrap(),
+            ShellMessage::Cancel
+        ));
+        assert!(matches!(
+            serde_json::from_str::<ShellMessage>(r#"{"type":"list_sessions"}"#).unwrap(),
+            ShellMessage::ListSessions
+        ));
+    }
+
+    #[test]
+    fn test_shell_load_session_roundtrip() {
+        let msg = ShellMessage::LoadSession {
+            session_id: "sess-1".to_string(),
+        };
+        let json = serde_json::to_string(&msg).unwrap();
+        assert!(json.contains("\"type\":\"load_session\""));
+        let back: ShellMessage = serde_json::from_str(&json).unwrap();
+        match back {
+            ShellMessage::LoadSession { session_id } => assert_eq!(session_id, "sess-1"),
+            other => panic!("wrong variant: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_orchestrator_status_serialization() {
+        let msg = OrchestratorMessage::Status {
+            model: "qwen2.5:7b".to_string(),
+            ollama_connected: true,
+            session_count: 3,
+        };
+        let json = serde_json::to_string(&msg).unwrap();
+        assert!(json.contains("\"type\":\"status\""));
+        assert!(json.contains("\"ollama_connected\":true"));
+        assert!(json.contains("\"session_count\":3"));
+    }
+
+    #[test]
+    fn test_orchestrator_chunk_and_done_roundtrip() {
+        let chunk = OrchestratorMessage::Chunk {
+            content: "tok".to_string(),
+        };
+        let json = serde_json::to_string(&chunk).unwrap();
+        assert!(json.contains("\"type\":\"chunk\""));
+
+        let done = OrchestratorMessage::Done {
+            full_response: "all done".to_string(),
+        };
+        let json = serde_json::to_string(&done).unwrap();
+        let back: OrchestratorMessage = serde_json::from_str(&json).unwrap();
+        match back {
+            OrchestratorMessage::Done { full_response } => assert_eq!(full_response, "all done"),
+            other => panic!("wrong variant: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_orchestrator_session_list_roundtrip() {
+        let msg = OrchestratorMessage::SessionList {
+            sessions: vec![SessionInfo {
+                id: "id1".to_string(),
+                title: Some("My chat".to_string()),
+                message_count: 5,
+            }],
+        };
+        let json = serde_json::to_string(&msg).unwrap();
+        assert!(json.contains("\"type\":\"session_list\""));
+        let back: OrchestratorMessage = serde_json::from_str(&json).unwrap();
+        match back {
+            OrchestratorMessage::SessionList { sessions } => {
+                assert_eq!(sessions.len(), 1);
+                assert_eq!(sessions[0].id, "id1");
+                assert_eq!(sessions[0].title.as_deref(), Some("My chat"));
+                assert_eq!(sessions[0].message_count, 5);
+            }
+            other => panic!("wrong variant: {:?}", other),
+        }
     }
 }

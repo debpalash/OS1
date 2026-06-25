@@ -23,15 +23,15 @@
 mod agents;
 mod intent;
 mod ipc;
+mod niri;
 mod ollama;
 mod router;
 mod session;
-mod tools;
 mod tool_parser;
-mod niri;
+mod tools;
 
 use anyhow::Result;
-use indos_context_engine::{ContextEngine, MemorySource, new_memory};
+use indos_context_engine::{new_memory, ContextEngine, MemorySource};
 use indos_privacy::{PrivacyFilter, PrivacyZone};
 use indos_security::SecurityEngine;
 use ipc::{IpcServer, OrchestratorMessage, SessionInfo, ShellMessage};
@@ -158,7 +158,11 @@ async fn main() -> Result<()> {
             content: config.system_prompt.clone(),
         }]
     } else {
-        tracing::info!("Restored session: {} ({} messages)", session_id, restored_messages.len());
+        tracing::info!(
+            "Restored session: {} ({} messages)",
+            session_id,
+            restored_messages.len()
+        );
         restored_messages
     };
 
@@ -227,7 +231,9 @@ async fn handle_message(
             let agent_target = router::route(&user_intent);
             tracing::info!(
                 "Intent: {:?} (confidence: {:.2}) → {:?}",
-                user_intent.category, user_intent.confidence, agent_target
+                user_intent.category,
+                user_intent.confidence,
+                agent_target
             );
 
             // Select model based on intent + available models
@@ -357,7 +363,8 @@ async fn handle_message(
                         // Execute tools
                         let tool_output = {
                             let state = state.lock().await;
-                            tool_parser::execute_tool_calls(&parsed.tool_calls, &state.security).await
+                            tool_parser::execute_tool_calls(&parsed.tool_calls, &state.security)
+                                .await
                         };
                         tracing::info!("Tool output: {} chars", tool_output.len());
 
@@ -402,7 +409,8 @@ async fn handle_message(
                                     role: "assistant".into(),
                                     content: followup_response.clone(),
                                 });
-                                let memory = new_memory(&followup_response, MemorySource::Conversation);
+                                let memory =
+                                    new_memory(&followup_response, MemorySource::Conversation);
                                 if let Err(e) = state.context.remember(memory).await {
                                     tracing::debug!("Context remember failed: {}", e);
                                 }
@@ -429,7 +437,10 @@ async fn handle_message(
                                 }
                                 let _ = resp_tx
                                     .send(OrchestratorMessage::Done {
-                                        full_response: format!("{}\n\n{}", parsed.text, tool_output),
+                                        full_response: format!(
+                                            "{}\n\n{}",
+                                            parsed.text, tool_output
+                                        ),
                                     })
                                     .await;
                                 tracing::warn!("Follow-up generation failed: {}", e);
@@ -536,7 +547,11 @@ async fn handle_message(
                         messages
                     };
                     state.session_id = session_id.clone();
-                    tracing::info!("Switched to session {} ({} messages)", session_id, msg_count);
+                    tracing::info!(
+                        "Switched to session {} ({} messages)",
+                        session_id,
+                        msg_count
+                    );
                     let _ = resp_tx
                         .send(OrchestratorMessage::Done {
                             full_response: format!("Loaded session {}", session_id),

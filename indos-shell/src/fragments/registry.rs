@@ -7,13 +7,13 @@ use iced::Element;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use super::system_monitor;
-use super::text_block;
-use super::terminal;
-use super::file_list;
-use super::code_view;
 use super::chart;
+use super::code_view;
+use super::file_list;
 use super::markdown;
+use super::system_monitor;
+use super::terminal;
+use super::text_block;
 
 /// A2UI fragment descriptor from the orchestrator
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -77,37 +77,21 @@ impl FragmentRegistry {
     }
 
     /// List all registered component names
+    #[allow(dead_code)] // public API, not yet wired into the shell
     pub fn list(&self) -> Vec<&str> {
         self.components.keys().map(|s| s.as_str()).collect()
     }
 
     /// Render a fragment descriptor into an iced Element
-    pub fn render<'a, M: 'a + Clone>(
-        &self,
-        descriptor: &FragmentDescriptor,
-    ) -> Element<'a, M> {
+    pub fn render<'a, M: 'a + Clone>(&self, descriptor: &FragmentDescriptor) -> Element<'a, M> {
         match self.get(&descriptor.component) {
-            Some(FragmentType::TextBlock) => {
-                text_block::render(&descriptor.props)
-            }
-            Some(FragmentType::SystemMonitor) => {
-                system_monitor::render(&descriptor.props)
-            }
-            Some(FragmentType::Terminal) => {
-                terminal::render(&descriptor.props)
-            }
-            Some(FragmentType::FileList) => {
-                file_list::render(&descriptor.props)
-            }
-            Some(FragmentType::CodeView) => {
-                code_view::render(&descriptor.props)
-            }
-            Some(FragmentType::Chart) => {
-                chart::render(&descriptor.props)
-            }
-            Some(FragmentType::Markdown) => {
-                markdown::render(&descriptor.props)
-            }
+            Some(FragmentType::TextBlock) => text_block::render(&descriptor.props),
+            Some(FragmentType::SystemMonitor) => system_monitor::render(&descriptor.props),
+            Some(FragmentType::Terminal) => terminal::render(&descriptor.props),
+            Some(FragmentType::FileList) => file_list::render(&descriptor.props),
+            Some(FragmentType::CodeView) => code_view::render(&descriptor.props),
+            Some(FragmentType::Chart) => chart::render(&descriptor.props),
+            Some(FragmentType::Markdown) => markdown::render(&descriptor.props),
             None => {
                 // Unknown fragment — render a placeholder
                 let msg = format!("⚠ Unknown fragment: {}", descriptor.component);

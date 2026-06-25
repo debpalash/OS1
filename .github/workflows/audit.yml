@@ -1,0 +1,84 @@
+name: Security Audit
+
+# Checks the dependency tree against the RustSec advisory database and enforces
+# the cargo-deny policy (advisories / bans / sources / licenses).
+# Runs weekly and on demand (not on every PR) so a freshly-published advisory
+# in a transitive dep surfaces without blocking day-to-day development.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "**/Cargo.toml"
+      - "**/Cargo.lock"
+      - "deny.toml"
+      - ".github/workflows/audit.yml"
+
+jobs:
+  cargo-audit:
+    name: cargo audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run cargo-audit
+        uses: rustsec/audit-check@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  cargo-deny:
+    name: cargo-deny (advisories · bans · sources · licenses)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Prebuilt binary -> no compile step. ubuntu-latest already ships cargo,
+      # which `cargo deny` shells out to for `cargo metadata`.
+      - name: Install cargo-deny
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny
+
+      # The two GUI crates are separate workspace roots with their own lockfiles,
+      # so we run cargo-deny against each manifest. The shared root config
+      # (deny.toml) is passed explicitly so every manifest uses the same policy
+      # instead of cargo-deny's per-workspace default lookup.
+      #
+      # BLOCKING: a known vulnerability, a banned/unknown source, etc. fails CI.
+      - name: Check advisories, bans, sources (blocking)
+        run: |
+          for manifest in \
+            Cargo.toml \
+            indos-shell/Cargo.toml \
+            indos-canvas/src-tauri/Cargo.toml; do
+            echo "::group::cargo-deny $manifest"
+            cargo deny \
+              --manifest-path "$manifest" \
+              check --config "$GITHUB_WORKSPACE/deny.toml" \
+              advisories bans sources
+            echo "::endgroup::"
+          done
+
+      # NON-BLOCKING (for now): the license allowlist is committed but advisory
+      # only until the large transitive tree is curated. continue-on-error keeps
+      # this visible in the run without failing the build. Flip to blocking once
+      # the tree is clean.
+      - name: Check licenses (non-blocking)
+        continue-on-error: true
+        run: |
+          for manifest in \
+            Cargo.toml \
+            indos-shell/Cargo.toml \
+            indos-canvas/src-tauri/Cargo.toml; do
+            echo "::group::cargo-deny licenses $manifest"
+            cargo deny \
+              --manifest-path "$manifest" \
+              check --config "$GITHUB_WORKSPACE/deny.toml" \
+              licenses
+            echo "::endgroup::"
+          done

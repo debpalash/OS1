@@ -39,8 +39,7 @@ impl TtsEngine {
                 .output()
                 .await
             {
-                if out.status.success()
-                    && String::from_utf8_lossy(&out.stdout).contains("--model")
+                if out.status.success() && String::from_utf8_lossy(&out.stdout).contains("--model")
                 {
                     return Some(path.to_string());
                 }
@@ -104,16 +103,21 @@ impl TtsEngine {
 
     /// Synthesize text to a WAV file
     pub async fn synthesize_to_file(&self, text: &str, output_path: &str) -> Result<()> {
-        let piper = self.piper_path.as_deref()
+        let piper = self
+            .piper_path
+            .as_deref()
             .ok_or_else(|| anyhow::anyhow!("Piper not installed"))?;
         let model = Self::resolve_voice(&self.voice)
             .ok_or_else(|| anyhow::anyhow!("voice model '{}' not found", self.voice))?;
 
         let output = Command::new(piper)
             .args([
-                "--model", &model.to_string_lossy(),
-                "--output_file", output_path,
-                "--length_scale", &format!("{:.2}", 1.0 / self.rate),
+                "--model",
+                &model.to_string_lossy(),
+                "--output_file",
+                output_path,
+                "--length_scale",
+                &format!("{:.2}", 1.0 / self.rate),
             ])
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -177,5 +181,54 @@ fn parse_wav_to_f32(data: &[u8]) -> Result<Vec<f32>> {
             Ok(samples)
         }
         _ => anyhow::bail!("Unsupported WAV bit depth: {}", bits_per_sample),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Build a minimal 44-byte WAV header with the given bit depth, followed
+    /// by `data` bytes for the data chunk.
+    fn wav_with(bits_per_sample: u16, data: &[u8]) -> Vec<u8> {
+        let mut buf = vec![0u8; 44];
+        buf[34] = (bits_per_sample & 0xff) as u8;
+        buf[35] = (bits_per_sample >> 8) as u8;
+        buf.extend_from_slice(data);
+        buf
+    }
+
+    #[test]
+    fn parse_wav_rejects_too_small() {
+        let err = parse_wav_to_f32(&[0u8; 10]).unwrap_err();
+        assert!(err.to_string().contains("too small"));
+    }
+
+    #[test]
+    fn parse_wav_rejects_unsupported_bit_depth() {
+        let bytes = wav_with(24, &[]);
+        let err = parse_wav_to_f32(&bytes).unwrap_err();
+        assert!(err.to_string().contains("bit depth"));
+    }
+
+    #[test]
+    fn parse_wav_decodes_16bit_samples() {
+        // Two i16 samples: 0 and i16::MAX, little-endian.
+        let mut data = Vec::new();
+        data.extend_from_slice(&0i16.to_le_bytes());
+        data.extend_from_slice(&i16::MAX.to_le_bytes());
+        let bytes = wav_with(16, &data);
+        let samples = parse_wav_to_f32(&bytes).unwrap();
+        assert_eq!(samples.len(), 2);
+        assert!((samples[0] - 0.0).abs() < f32::EPSILON);
+        // i16::MAX / 32768 ≈ 0.99997.
+        assert!((samples[1] - (i16::MAX as f32 / 32768.0)).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn parse_wav_empty_data_yields_no_samples() {
+        let bytes = wav_with(16, &[]);
+        let samples = parse_wav_to_f32(&bytes).unwrap();
+        assert!(samples.is_empty());
     }
 }

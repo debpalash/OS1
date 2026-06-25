@@ -1,9 +1,9 @@
 [package]
 name = "indos-voice"
-version = "0.1.0"
-edition = "2021"
-license = "GPL-3.0"
-authors = ["IndOS Contributors"]
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
 description = "IndOS voice I/O pipeline — local STT (Faster-Whisper) + TTS (Piper) + PipeWire"
 
 [[bin]]
@@ -18,18 +18,18 @@ path = "examples/tts_smoke.rs"
 # Audio I/O via PipeWire subprocesses (pw-record / pw-play)
 
 # Async runtime
-tokio = { version = "1", features = ["full"] }
+tokio = { workspace = true, features = ["net", "io-util", "process", "signal", "time"] }
 
 # IPC
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde.workspace = true
+serde_json.workspace = true
 
 # Logging
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing.workspace = true
+tracing-subscriber.workspace = true
 
 # Config
-toml = "0.8"
-dirs = "5"
-anyhow = "1"
-libc = "0.2"
+toml.workspace = true
+dirs.workspace = true
+anyhow.workspace = true
+libc.workspace = true

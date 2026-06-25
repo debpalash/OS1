@@ -11,16 +11,22 @@ impl NiriClient {
     }
 
     /// List all workspaces
+    // compositor control API, not yet wired up
+    #[allow(dead_code)]
     pub fn list_workspaces() -> Result<Value, String> {
         Self::run_niri_cmd(&["workspaces"])
     }
 
     /// Focus a specific window by ID
+    // compositor control API, not yet wired up
+    #[allow(dead_code)]
     pub fn focus_window(id: u64) -> Result<Value, String> {
         Self::run_niri_cmd(&["action", "focus-window", "--id", &id.to_string()])
     }
 
     /// Move a window to a specific output
+    // compositor control API, not yet wired up
+    #[allow(dead_code)]
     pub fn move_window_to_output(window_id: u64, output_name: &str) -> Result<Value, String> {
         // First focus the window
         Self::focus_window(window_id)?;
@@ -35,7 +41,9 @@ impl NiriClient {
             cmd.arg(arg);
         }
 
-        let output = cmd.output().map_err(|e| format!("Failed to execute niri msg: {}", e))?;
+        let output = cmd
+            .output()
+            .map_err(|e| format!("Failed to execute niri msg: {}", e))?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);

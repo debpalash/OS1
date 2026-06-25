@@ -230,13 +230,22 @@ pub async fn execute_tool_checked(
         "list_files" => ("read", args["path"].as_str().unwrap_or(".").to_string()),
         "read_file" => ("read", args["path"].as_str().unwrap_or("").to_string()),
         "write_file" => ("write", args["path"].as_str().unwrap_or("").to_string()),
-        "search_files" => ("read", args["directory"].as_str().unwrap_or(".").to_string()),
+        "search_files" => (
+            "read",
+            args["directory"].as_str().unwrap_or(".").to_string(),
+        ),
         "run_command" => ("spawn", args["command"].as_str().unwrap_or("").to_string()),
-        "package_manager" => ("spawn", format!("pacman {}", args["action"].as_str().unwrap_or(""))),
+        "package_manager" => (
+            "spawn",
+            format!("pacman {}", args["action"].as_str().unwrap_or("")),
+        ),
         "system_info" => ("read", "/proc".to_string()),
         "screen_context" => ("read", "screenpipe:ocr".to_string()),
         "monitor_info" => ("read", "niri".to_string()),
-        "system_setting" => ("spawn", args["setting"].as_str().unwrap_or("setting").to_string()),
+        "system_setting" => (
+            "spawn",
+            args["setting"].as_str().unwrap_or("setting").to_string(),
+        ),
         "toggle_focus_mode" => ("spawn", "swaync".to_string()),
         "hw_info" => ("spawn", "hwinfo".to_string()),
         "launch_installer" => ("spawn", "calamares".to_string()),
@@ -254,12 +263,18 @@ pub async fn execute_tool_checked(
         AuditResult::Allowed => execute_tool(name, args).await,
         AuditResult::Denied => ToolResult {
             success: false,
-            output: format!("SECURITY DENIED: {} not allowed to {} '{}'", agent_id, action, target),
+            output: format!(
+                "SECURITY DENIED: {} not allowed to {} '{}'",
+                agent_id, action, target
+            ),
             fragment: None,
         },
         AuditResult::RequiresApproval => ToolResult {
             success: false,
-            output: format!("APPROVAL REQUIRED: {} wants to {} '{}'", agent_id, action, target),
+            output: format!(
+                "APPROVAL REQUIRED: {} wants to {} '{}'",
+                agent_id, action, target
+            ),
             fragment: None,
         },
         AuditResult::Error(e) => ToolResult {
@@ -320,7 +335,10 @@ async fn tool_read_file(args: &serde_json::Value) -> ToolResult {
                 .join("\n");
             let total_lines = content.lines().count();
             let note = if total_lines > max_lines {
-                format!("\n\n[... truncated, showing {}/{} lines]", max_lines, total_lines)
+                format!(
+                    "\n\n[... truncated, showing {}/{} lines]",
+                    max_lines, total_lines
+                )
             } else {
                 String::new()
             };
@@ -346,7 +364,10 @@ async fn tool_write_file(args: &serde_json::Value) -> ToolResult {
     if path.starts_with("/etc") || path.starts_with("/usr") || path.starts_with("/boot") {
         return ToolResult {
             success: false,
-            output: format!("BLOCKED: Writing to system path '{}' requires confirmation", path),
+            output: format!(
+                "BLOCKED: Writing to system path '{}' requires confirmation",
+                path
+            ),
             fragment: None,
         };
     }
@@ -375,7 +396,14 @@ async fn tool_run_command(args: &serde_json::Value) -> ToolResult {
     let timeout = args["timeout_secs"].as_u64().unwrap_or(30);
 
     // Safety: block destructive commands
-    let blocked = ["rm -rf /", "mkfs", "dd if=", "> /dev/sd", "shutdown", "reboot"];
+    let blocked = [
+        "rm -rf /",
+        "mkfs",
+        "dd if=",
+        "> /dev/sd",
+        "shutdown",
+        "reboot",
+    ];
     for b in &blocked {
         if command.contains(b) {
             return ToolResult {
@@ -432,14 +460,20 @@ async fn tool_system_info() -> ToolResult {
     if let Ok(os) = tokio::fs::read_to_string("/etc/os-release").await {
         for line in os.lines() {
             if line.starts_with("PRETTY_NAME=") {
-                info.push_str(&format!("OS: {}\n", line.trim_start_matches("PRETTY_NAME=").trim_matches('"')));
+                info.push_str(&format!(
+                    "OS: {}\n",
+                    line.trim_start_matches("PRETTY_NAME=").trim_matches('"')
+                ));
             }
         }
     }
 
     // Kernel
     if let Ok(output) = Command::new("uname").arg("-r").output().await {
-        info.push_str(&format!("Kernel: {}\n", String::from_utf8_lossy(&output.stdout).trim()));
+        info.push_str(&format!(
+            "Kernel: {}\n",
+            String::from_utf8_lossy(&output.stdout).trim()
+        ));
     }
 
     // CPU
@@ -457,10 +491,18 @@ async fn tool_system_info() -> ToolResult {
         let mut avail = 0u64;
         for line in meminfo.lines() {
             if line.starts_with("MemTotal:") {
-                total = line.split_whitespace().nth(1).and_then(|v| v.parse().ok()).unwrap_or(0);
+                total = line
+                    .split_whitespace()
+                    .nth(1)
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(0);
             }
             if line.starts_with("MemAvailable:") {
-                avail = line.split_whitespace().nth(1).and_then(|v| v.parse().ok()).unwrap_or(0);
+                avail = line
+                    .split_whitespace()
+                    .nth(1)
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(0);
             }
         }
         let used = total.saturating_sub(avail);
@@ -468,13 +510,24 @@ async fn tool_system_info() -> ToolResult {
             "Memory: {:.1} GB / {:.1} GB ({:.0}% used)\n",
             used as f64 / 1_048_576.0,
             total as f64 / 1_048_576.0,
-            if total > 0 { used as f64 / total as f64 * 100.0 } else { 0.0 }
+            if total > 0 {
+                used as f64 / total as f64 * 100.0
+            } else {
+                0.0
+            }
         ));
     }
 
     // Disk
-    if let Ok(output) = Command::new("df").args(["-h", "--output=target,size,used,avail,pcent", "/"]).output().await {
-        info.push_str(&format!("Disk:\n{}", String::from_utf8_lossy(&output.stdout)));
+    if let Ok(output) = Command::new("df")
+        .args(["-h", "--output=target,size,used,avail,pcent", "/"])
+        .output()
+        .await
+    {
+        info.push_str(&format!(
+            "Disk:\n{}",
+            String::from_utf8_lossy(&output.stdout)
+        ));
     }
 
     // GPU
@@ -482,7 +535,7 @@ async fn tool_system_info() -> ToolResult {
         let stdout = String::from_utf8_lossy(&output.stdout);
         for line in stdout.lines() {
             if line.contains("VGA") || line.contains("3D") {
-                if let Some(name) = line.split(':').last() {
+                if let Some(name) = line.split(':').next_back() {
                     info.push_str(&format!("GPU: {}\n", name.trim()));
                 }
             }
@@ -491,7 +544,10 @@ async fn tool_system_info() -> ToolResult {
 
     // Uptime
     if let Ok(output) = Command::new("uptime").arg("-p").output().await {
-        info.push_str(&format!("Uptime: {}\n", String::from_utf8_lossy(&output.stdout).trim()));
+        info.push_str(&format!(
+            "Uptime: {}\n",
+            String::from_utf8_lossy(&output.stdout).trim()
+        ));
     }
 
     ToolResult {
@@ -721,7 +777,10 @@ async fn tool_monitor_info() -> ToolResult {
     match crate::niri::NiriClient::list_outputs() {
         Ok(data) => ToolResult {
             success: true,
-            output: format!("Monitor Info:\n{}", serde_json::to_string_pretty(&data).unwrap_or_default()),
+            output: format!(
+                "Monitor Info:\n{}",
+                serde_json::to_string_pretty(&data).unwrap_or_default()
+            ),
             fragment: None,
         },
         Err(e) => ToolResult {
@@ -735,41 +794,83 @@ async fn tool_monitor_info() -> ToolResult {
 async fn tool_system_setting(args: &serde_json::Value) -> ToolResult {
     let setting = args["setting"].as_str().unwrap_or("");
     let value = args["value"].as_str().unwrap_or("");
-    
+
     let (cmd, cmd_args): (&str, Vec<&str>) = match setting {
         "volume" => ("wpctl", vec!["set-volume", "@DEFAULT_AUDIO_SINK@", value]),
         "brightness" => ("brightnessctl", vec!["set", value]),
         "wifi" => ("nmcli", vec!["radio", "wifi", value]),
-        _ => return ToolResult { success: false, output: "Unknown setting".into(), fragment: None },
+        _ => {
+            return ToolResult {
+                success: false,
+                output: "Unknown setting".into(),
+                fragment: None,
+            }
+        }
     };
-    
+
     match Command::new(cmd).args(&cmd_args).output().await {
-        Ok(out) => ToolResult { success: out.status.success(), output: String::from_utf8_lossy(&out.stdout).to_string(), fragment: None },
-        Err(e) => ToolResult { success: false, output: e.to_string(), fragment: None },
+        Ok(out) => ToolResult {
+            success: out.status.success(),
+            output: String::from_utf8_lossy(&out.stdout).to_string(),
+            fragment: None,
+        },
+        Err(e) => ToolResult {
+            success: false,
+            output: e.to_string(),
+            fragment: None,
+        },
     }
 }
 
 async fn tool_toggle_focus_mode() -> ToolResult {
     match Command::new("swaync-client").arg("-t").output().await {
         Ok(out) => {
-            let _ = Command::new("niri").args(["msg", "action", "maximize-window"]).output().await;
-            ToolResult { success: out.status.success(), output: "Focus mode toggled. Notification DND state changed and window maximized.".into(), fragment: None }
+            let _ = Command::new("niri")
+                .args(["msg", "action", "maximize-window"])
+                .output()
+                .await;
+            ToolResult {
+                success: out.status.success(),
+                output: "Focus mode toggled. Notification DND state changed and window maximized."
+                    .into(),
+                fragment: None,
+            }
+        }
+        Err(e) => ToolResult {
+            success: false,
+            output: e.to_string(),
+            fragment: None,
         },
-        Err(e) => ToolResult { success: false, output: e.to_string(), fragment: None },
     }
 }
 
 async fn tool_hw_info() -> ToolResult {
     match Command::new("hwinfo").arg("--short").output().await {
-        Ok(out) => ToolResult { success: out.status.success(), output: String::from_utf8_lossy(&out.stdout).to_string(), fragment: None },
-        Err(e) => ToolResult { success: false, output: e.to_string(), fragment: None },
+        Ok(out) => ToolResult {
+            success: out.status.success(),
+            output: String::from_utf8_lossy(&out.stdout).to_string(),
+            fragment: None,
+        },
+        Err(e) => ToolResult {
+            success: false,
+            output: e.to_string(),
+            fragment: None,
+        },
     }
 }
 
 async fn tool_launch_installer() -> ToolResult {
     match Command::new("calamares").spawn() {
-        Ok(_) => ToolResult { success: true, output: "Installer launched successfully.".into(), fragment: None },
-        Err(e) => ToolResult { success: false, output: format!("Failed to launch installer: {}", e), fragment: None },
+        Ok(_) => ToolResult {
+            success: true,
+            output: "Installer launched successfully.".into(),
+            fragment: None,
+        },
+        Err(e) => ToolResult {
+            success: false,
+            output: format!("Failed to launch installer: {}", e),
+            fragment: None,
+        },
     }
 }
 
@@ -777,9 +878,20 @@ async fn tool_donut_fetch(args: &serde_json::Value) -> ToolResult {
     let url = args["url"].as_str().unwrap_or("");
     match Command::new("curl").args(["-s", "-L", url]).output().await {
         Ok(out) => {
-            let text = String::from_utf8_lossy(&out.stdout).chars().take(4000).collect::<String>();
-            ToolResult { success: out.status.success(), output: format!("Fetched URL content (truncated):\n{}", text), fragment: None }
+            let text = String::from_utf8_lossy(&out.stdout)
+                .chars()
+                .take(4000)
+                .collect::<String>();
+            ToolResult {
+                success: out.status.success(),
+                output: format!("Fetched URL content (truncated):\n{}", text),
+                fragment: None,
+            }
+        }
+        Err(e) => ToolResult {
+            success: false,
+            output: e.to_string(),
+            fragment: None,
         },
-        Err(e) => ToolResult { success: false, output: e.to_string(), fragment: None },
     }
 }

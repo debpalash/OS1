@@ -136,17 +136,15 @@ impl SecurityEngine {
         self.register_agent(AgentCapability::coding_agent("claude-code"));
 
         self.ready = true;
-        tracing::info!("Security engine ready ({} agents registered)", self.capabilities.len());
+        tracing::info!(
+            "Security engine ready ({} agents registered)",
+            self.capabilities.len()
+        );
         Ok(())
     }
 
     /// Check if an agent is allowed to perform an action
-    pub fn check(
-        &self,
-        agent_id: &str,
-        action: &str,
-        target: &str,
-    ) -> AuditResult {
+    pub fn check(&self, agent_id: &str, action: &str, target: &str) -> AuditResult {
         let result = self.evaluate(agent_id, action, target);
 
         // Write audit entry
@@ -164,7 +162,9 @@ impl SecurityEngine {
         if matches!(result, AuditResult::Denied) {
             tracing::warn!(
                 "SECURITY DENIED: agent={} action={} target={}",
-                agent_id, action, target
+                agent_id,
+                action,
+                target
             );
         }
 
@@ -182,15 +182,9 @@ impl SecurityEngine {
         };
 
         match action {
-            "read" | "write" | "delete" | "execute" => {
-                self.check_filesystem(cap, action, target)
-            }
-            "spawn" => {
-                self.check_process(cap, target)
-            }
-            "network" => {
-                self.check_network(cap, target)
-            }
+            "read" | "write" | "delete" | "execute" => self.check_filesystem(cap, action, target),
+            "spawn" => self.check_process(cap, target),
+            "network" => self.check_network(cap, target),
             _ => {
                 tracing::debug!("Unknown action type: {} — allowing", action);
                 AuditResult::Allowed
@@ -251,15 +245,24 @@ impl SecurityEngine {
         }
 
         // Check blocked domains
-        if cap.network.blocked_domains.iter().any(|d| domain.contains(d.as_str())) {
+        if cap
+            .network
+            .blocked_domains
+            .iter()
+            .any(|d| domain.contains(d.as_str()))
+        {
             return AuditResult::Denied;
         }
 
         // Check allowed domains (empty = allow all)
-        if !cap.network.allowed_domains.is_empty() {
-            if !cap.network.allowed_domains.iter().any(|d| domain.contains(d.as_str())) {
-                return AuditResult::Denied;
-            }
+        if !cap.network.allowed_domains.is_empty()
+            && !cap
+                .network
+                .allowed_domains
+                .iter()
+                .any(|d| domain.contains(d.as_str()))
+        {
+            return AuditResult::Denied;
         }
 
         AuditResult::Allowed
@@ -291,14 +294,27 @@ impl SecurityEngine {
 
         let mut args = vec![
             "bwrap".to_string(),
-            "--ro-bind".into(), "/usr".into(), "/usr".into(),
-            "--ro-bind".into(), "/lib".into(), "/lib".into(),
-            "--ro-bind".into(), "/lib64".into(), "/lib64".into(),
-            "--ro-bind".into(), "/bin".into(), "/bin".into(),
-            "--ro-bind".into(), "/etc/resolv.conf".into(), "/etc/resolv.conf".into(),
-            "--proc".into(), "/proc".into(),
-            "--dev".into(), "/dev".into(),
-            "--tmpfs".into(), "/tmp".into(),
+            "--ro-bind".into(),
+            "/usr".into(),
+            "/usr".into(),
+            "--ro-bind".into(),
+            "/lib".into(),
+            "/lib".into(),
+            "--ro-bind".into(),
+            "/lib64".into(),
+            "/lib64".into(),
+            "--ro-bind".into(),
+            "/bin".into(),
+            "/bin".into(),
+            "--ro-bind".into(),
+            "/etc/resolv.conf".into(),
+            "/etc/resolv.conf".into(),
+            "--proc".into(),
+            "/proc".into(),
+            "--dev".into(),
+            "/dev".into(),
+            "--tmpfs".into(),
+            "/tmp".into(),
         ];
 
         // Mount filesystem paths based on capabilities
@@ -309,7 +325,9 @@ impl SecurityEngine {
                 "--ro-bind"
             };
             // Expand ~ to home
-            let path = rule.path.replace("~", &std::env::var("HOME").unwrap_or_default());
+            let path = rule
+                .path
+                .replace("~", &std::env::var("HOME").unwrap_or_default());
             let clean_path = path.trim_end_matches("/**");
             args.push(bind_type.into());
             args.push(clean_path.into());
@@ -405,11 +423,7 @@ impl AgentCapability {
                     "python".into(),
                     "node".into(),
                 ],
-                blocked_commands: vec![
-                    "rm -rf /".into(),
-                    "dd".into(),
-                    "mkfs".into(),
-                ],
+                blocked_commands: vec!["rm -rf /".into(), "dd".into(), "mkfs".into()],
             },
             requires_approval: true,
             max_session_seconds: 3600, // 1 hour max

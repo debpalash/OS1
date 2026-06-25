@@ -92,7 +92,10 @@ fn briefing_facts() -> String {
         .arg("+%A, %B %d, %H:%M")
         .output();
     if let Ok(o) = out {
-        facts.push(format!("now: {}", String::from_utf8_lossy(&o.stdout).trim()));
+        facts.push(format!(
+            "now: {}",
+            String::from_utf8_lossy(&o.stdout).trim()
+        ));
     }
     if let Ok(o) = std::process::Command::new("sh")
         .args(["-c", "df --output=pcent / | tail -1"])
@@ -128,7 +131,11 @@ async fn maybe_briefing(pipeline: &Pipeline, cfg: &VoiceConfig, status: &PathBuf
         .output()
         .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
         .unwrap_or_default();
-    if today.is_empty() || std::fs::read_to_string(&marker).map(|d| d.trim() == today).unwrap_or(false) {
+    if today.is_empty()
+        || std::fs::read_to_string(&marker)
+            .map(|d| d.trim() == today)
+            .unwrap_or(false)
+    {
         return;
     }
 
@@ -169,8 +176,7 @@ async fn speak(pipeline: &Pipeline, text: &str, status: &PathBuf) {
 async fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "info".into()),
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()),
         )
         .init();
 
@@ -190,15 +196,15 @@ async fn main() -> Result<()> {
         let hot = hot_until.clone();
         let window = cfg.conversation_window_secs.max(10);
         tokio::spawn(async move {
-            let mut sig = match tokio::signal::unix::signal(
-                tokio::signal::unix::SignalKind::user_defined1(),
-            ) {
-                Ok(s) => s,
-                Err(e) => {
-                    tracing::warn!("SIGUSR1 handler unavailable: {e}");
-                    return;
-                }
-            };
+            let mut sig =
+                match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::user_defined1())
+                {
+                    Ok(s) => s,
+                    Err(e) => {
+                        tracing::warn!("SIGUSR1 handler unavailable: {e}");
+                        return;
+                    }
+                };
             while sig.recv().await.is_some() {
                 tracing::info!("SIGUSR1: voice hot window opened");
                 hot.store(now_secs() + window, Ordering::Relaxed);
@@ -237,16 +243,19 @@ async fn main() -> Result<()> {
         }
 
         set_status(&status, "listening");
-        let captured = match audio::capture_utterance(cfg.vad_threshold, cfg.input_device.as_deref(), 600).await {
-            Ok(Some(samples)) if !samples.is_empty() => samples,
-            Ok(_) => continue,
-            Err(e) => {
-                tracing::warn!("mic capture failed ({e}); retrying in 30s");
-                set_status(&status, "off");
-                tokio::time::sleep(Duration::from_secs(30)).await;
-                continue;
-            }
-        };
+        let captured =
+            match audio::capture_utterance(cfg.vad_threshold, cfg.input_device.as_deref(), 600)
+                .await
+            {
+                Ok(Some(samples)) if !samples.is_empty() => samples,
+                Ok(_) => continue,
+                Err(e) => {
+                    tracing::warn!("mic capture failed ({e}); retrying in 30s");
+                    set_status(&status, "off");
+                    tokio::time::sleep(Duration::from_secs(30)).await;
+                    continue;
+                }
+            };
 
         set_status(&status, "processing");
         let transcript = match pipeline.stt.transcribe(&captured, audio::SAMPLE_RATE).await {
@@ -292,9 +301,70 @@ async fn main() -> Result<()> {
             }
             Err(e) => {
                 tracing::warn!("orchestrator request failed: {e}");
-                speak(&pipeline, "Sorry, I hit a snag talking to the brain. One sec.", &status)
-                    .await;
+                speak(
+                    &pipeline,
+                    "Sorry, I hit a snag talking to the brain. One sec.",
+                    &status,
+                )
+                .await;
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{normalize, speakable};
+
+    #[test]
+    fn normalize_lowercases_and_strips_punctuation() {
+        assert_eq!(normalize("Hey, OS!"), "hey os");
+        assert_eq!(normalize("hey os"), "hey os");
+    }
+
+    #[test]
+    fn normalize_collapses_whitespace() {
+        assert_eq!(
+            normalize("  multiple   spaces\ttab\nline "),
+            "multiple spaces tab line"
+        );
+        assert_eq!(normalize(""), "");
+        assert_eq!(normalize("!!!"), "");
+    }
+
+    #[test]
+    fn normalize_keeps_alphanumerics() {
+        assert_eq!(normalize("Open file_2.txt"), "open file 2 txt");
+    }
+
+    #[test]
+    fn speakable_strips_code_blocks_and_markdown() {
+        let input = "Here is code:\n```rust\nfn main() {}\n```\nDone *now* `ok` #h |x";
+        let out = speakable(input);
+        assert!(!out.contains("fn main"));
+        assert!(!out.contains('`'));
+        assert!(!out.contains('*'));
+        assert!(!out.contains('#'));
+        assert!(!out.contains('|'));
+        assert!(out.contains("Here is code"));
+        assert!(out.contains("Done now ok"));
+    }
+
+    #[test]
+    fn speakable_short_text_passes_through() {
+        assert_eq!(speakable("Just a sentence."), "Just a sentence.");
+    }
+
+    #[test]
+    fn speakable_truncates_long_text_at_sentence_boundary() {
+        // First sentence ends well before 600 chars; second pushes over.
+        let first = "A".repeat(400) + ".";
+        let second = " ".to_string() + &"B".repeat(400) + ".";
+        let input = format!("{first}{second}");
+        let out = speakable(&input);
+        assert!(out.len() <= 600);
+        // Cut happens at the first sentence end, so no 'B' survives.
+        assert!(!out.contains('B'));
+        assert!(out.ends_with('.'));
     }
 }
