@@ -19,13 +19,26 @@ version = 2
 # In config version 2, vulnerability and unsound advisories are *denied by
 # default* (they always error) -- that is what "deny known vulnerabilities"
 # means here; there is no separate field to set.
-# Unmaintained crates: fail for any crate in the tree, direct or transitive.
-unmaintained = "all"
+# Unmaintained crates: only flag ones we depend on *directly* (workspace members
+# or their direct deps). "all" floods on deep transitive crates we can't control
+# (gtk-rs GTK3 bindings via tauri, unic-*/instant/paste via arrow/iced, etc.),
+# which is noise — unmaintained != vulnerable. A direct dep going unmaintained
+# still fails the build.
+unmaintained = "workspace"
 # Yanked crate versions should fail the build (default is only "warn").
 yanked = "deny"
-# Add specific RustSec advisory IDs here (with a comment + link) only when we
-# have consciously accepted the risk, e.g. ignore = ["RUSTSEC-0000-0000"].
-ignore = []
+# Consciously-accepted *vulnerabilities*. These are denied by default; each is
+# pulled deep transitively and can't be fixed without a major upgrade, so we
+# accept + track them. The gate stays BLOCKING for any new advisory not listed.
+ignore = [
+    # Vulnerabilities in the OLD rustls 0.21 / rustls-webpki 0.101 chain, dragged
+    # in by lancedb 0.15 -> lance -> aws-sdk. Fixing requires upgrading lancedb
+    # (0.15 -> 0.30+), tracked separately. A newer rustls 0.23/webpki 0.103 also
+    # coexists in the tree; only the old AWS-SDK path is affected.
+    "RUSTSEC-2026-0098", # webpki: name constraints for URI names incorrectly accepted
+    "RUSTSEC-2026-0099", # webpki: name constraints accepted for wildcard certs
+    "RUSTSEC-2026-0104", # webpki: reachable panic in CRL parsing
+]
 
 # ---------------------------------------------------------------------------
 # Bans: dependency graph hygiene.

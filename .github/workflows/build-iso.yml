@@ -22,7 +22,9 @@ jobs:
       - name: Install dependencies
         run: |
           pacman -Syu --noconfirm
-          pacman -S --noconfirm archiso base-devel rust cargo findmnt git
+          # `findmnt` is provided by util-linux, not a standalone package
+          # (pacman errors with "target not found: findmnt" otherwise).
+          pacman -S --noconfirm archiso base-devel rust cargo util-linux git
 
       - name: Build ISO
         run: |
