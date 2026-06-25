@@ -1,3 +1,9 @@
+# indos-shell is intentionally NOT part of the root workspace (its iced/Wayland
+# stack conflicts with lancedb's pinned bytemuck — see the root Cargo.toml). This
+# empty [workspace] table makes it an independent workspace root with its own
+# Cargo.lock, so `cargo build` here resolves standalone.
+[workspace]
+
 [package]
 name = "indos-shell"
 version = "0.1.0"

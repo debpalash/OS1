@@ -7,11 +7,12 @@ dist/
 
 # Node
 node_modules/
-package-lock.json
 .npm/
+# NOTE: package-lock.json is committed for reproducible Tauri builds.
 
 # Rust
-Cargo.lock
+# NOTE: Cargo.lock is committed — these crates produce binaries shipped in the
+# ISO, so the lockfile must be tracked for reproducible builds.
 
 # IDE
 .idea/

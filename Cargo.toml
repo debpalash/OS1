@@ -1,0 +1,42 @@
+[workspace]
+resolver = "2"
+members = [
+    "indos-orchestrator",
+    "indos-voice",
+    "indos-privacy",
+    "indos-security",
+    "indos-context-engine",
+]
+# The two GUI frontends are kept out of the shared workspace on purpose:
+#   - indos-canvas  — Tauri app (webkit) with its own dependency tree + lockfile.
+#   - indos-shell   — iced/Wayland binary. It talks to the orchestrator only over
+#                     a Unix socket (no compile-time dep), and its iced stack
+#                     requires bytemuck ^1.22, which is mutually incompatible with
+#                     lancedb's pinned bytemuck =1.18 in indos-context-engine.
+#                     Unifying them in one lockfile is impossible until lancedb
+#                     is upgraded, so indos-shell keeps its own lockfile.
+exclude = ["indos-canvas", "indos-shell"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0"
+authors = ["IndOS Contributors"]
+
+# Centralized dependency versions. Crates opt in with `<dep>.workspace = true`
+# (and may add extra features locally, e.g. reqwest's "stream"). This keeps the
+# core async/serde/logging stack on a single version across all crates and lets
+# them share one compiled `target/`.
+[workspace.dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.12", features = ["json"] }
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4"] }
+toml = "0.8"
+dirs = "5"
+libc = "0.2"
