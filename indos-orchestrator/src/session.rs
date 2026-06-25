@@ -174,3 +174,63 @@ impl SessionManager {
         self.active_session_id.as_deref()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_session_serde_roundtrip() {
+        // Sessions are persisted as JSON and restored on reboot, so the
+        // round-trip must preserve all fields including the message history.
+        let now = Utc::now();
+        let session = Session {
+            id: "sess-123".to_string(),
+            title: Some("Greeting".to_string()),
+            created_at: now,
+            updated_at: now,
+            message_count: 2,
+            active: true,
+            messages: vec![
+                ChatMessage {
+                    role: "user".to_string(),
+                    content: "hi".to_string(),
+                },
+                ChatMessage {
+                    role: "assistant".to_string(),
+                    content: "hello".to_string(),
+                },
+            ],
+        };
+
+        let json = serde_json::to_string_pretty(&session).unwrap();
+        let back: Session = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(back.id, "sess-123");
+        assert_eq!(back.title.as_deref(), Some("Greeting"));
+        assert_eq!(back.message_count, 2);
+        assert!(back.active);
+        assert_eq!(back.messages.len(), 2);
+        assert_eq!(back.messages[0].role, "user");
+        assert_eq!(back.messages[1].content, "hello");
+    }
+
+    #[test]
+    fn test_session_with_no_title_serializes() {
+        let now = Utc::now();
+        let session = Session {
+            id: "sess-empty".to_string(),
+            title: None,
+            created_at: now,
+            updated_at: now,
+            message_count: 0,
+            active: false,
+            messages: Vec::new(),
+        };
+        let json = serde_json::to_string(&session).unwrap();
+        let back: Session = serde_json::from_str(&json).unwrap();
+        assert!(back.title.is_none());
+        assert!(back.messages.is_empty());
+        assert!(!back.active);
+    }
+}

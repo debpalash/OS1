@@ -403,3 +403,84 @@ pub fn new_memory(content: &str, source: MemorySource) -> MemoryEntry {
         metadata: String::new(),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn memory_source_display_strings() {
+        assert_eq!(MemorySource::Conversation.to_string(), "conversation");
+        assert_eq!(MemorySource::FileAccess.to_string(), "file_access");
+        assert_eq!(
+            MemorySource::TerminalCommand.to_string(),
+            "terminal_command"
+        );
+        assert_eq!(MemorySource::ApplicationContext.to_string(), "app_context");
+        assert_eq!(MemorySource::Clipboard.to_string(), "clipboard");
+        assert_eq!(MemorySource::ScreenCapture.to_string(), "screen_capture");
+        assert_eq!(MemorySource::UserNote.to_string(), "user_note");
+        assert_eq!(MemorySource::SystemEvent.to_string(), "system_event");
+    }
+
+    #[test]
+    fn memory_entry_serde_round_trip() {
+        let entry = MemoryEntry {
+            id: "abc-123".to_string(),
+            content: "hello world".to_string(),
+            source: MemorySource::TerminalCommand,
+            timestamp: "2026-06-26T00:00:00+00:00".to_string(),
+            metadata: r#"{"k":"v"}"#.to_string(),
+        };
+        let json = serde_json::to_string(&entry).unwrap();
+        let back: MemoryEntry = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.id, entry.id);
+        assert_eq!(back.content, entry.content);
+        assert_eq!(back.timestamp, entry.timestamp);
+        assert_eq!(back.metadata, entry.metadata);
+        assert_eq!(back.source.to_string(), "terminal_command");
+    }
+
+    #[test]
+    fn memory_entry_metadata_defaults_when_absent() {
+        // metadata carries #[serde(default)] so a payload without it parses.
+        let json = r#"{
+            "id": "id-1",
+            "content": "no metadata here",
+            "source": "Conversation",
+            "timestamp": "2026-06-26T00:00:00+00:00"
+        }"#;
+        let entry: MemoryEntry = serde_json::from_str(json).unwrap();
+        assert_eq!(entry.metadata, "");
+        assert!(matches!(entry.source, MemorySource::Conversation));
+    }
+
+    #[test]
+    fn new_memory_populates_fields() {
+        let entry = new_memory("a note", MemorySource::UserNote);
+        assert_eq!(entry.content, "a note");
+        assert!(entry.metadata.is_empty());
+        assert!(matches!(entry.source, MemorySource::UserNote));
+        // UUID v4 hyphenated form is 36 chars.
+        assert_eq!(entry.id.len(), 36);
+        // Timestamp is valid RFC3339.
+        assert!(chrono::DateTime::parse_from_rfc3339(&entry.timestamp).is_ok());
+    }
+
+    #[test]
+    fn new_memory_ids_are_unique() {
+        let a = new_memory("x", MemorySource::SystemEvent);
+        let b = new_memory("x", MemorySource::SystemEvent);
+        assert_ne!(a.id, b.id);
+    }
+
+    #[test]
+    fn context_result_relevance_score_from_distance() {
+        // Mirror the distance→relevance transform used in `recall`.
+        let score = |distance: f32| 1.0 / (1.0 + distance);
+        assert!((score(0.0) - 1.0).abs() < f32::EPSILON);
+        assert!((score(1.0) - 0.5).abs() < f32::EPSILON);
+        // Smaller distance must yield higher relevance.
+        assert!(score(0.2) > score(2.0));
+    }
+}

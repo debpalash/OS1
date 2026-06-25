@@ -156,4 +156,23 @@ Done."#;
         assert!(parsed.tool_calls.is_empty());
         assert!(parsed.text.contains("malformed tool call"));
     }
+
+    #[test]
+    fn test_unclosed_tool_block() {
+        // A tool fence that never closes should not yield a tool call and
+        // should surface the leftover content as text for debugging.
+        let input = "Here goes:\n```tool\n{\"tool\": \"list_files\", \"args\": {}}";
+        let parsed = parse_tool_calls(input);
+        assert!(parsed.tool_calls.is_empty());
+        assert!(parsed.text.contains("unclosed tool block"));
+    }
+
+    #[test]
+    fn test_tool_call_preserves_args() {
+        let input = "```tool\n{\"tool\": \"read_file\", \"args\": {\"path\": \"/etc/hosts\"}}\n```";
+        let parsed = parse_tool_calls(input);
+        assert_eq!(parsed.tool_calls.len(), 1);
+        assert_eq!(parsed.tool_calls[0].tool, "read_file");
+        assert_eq!(parsed.tool_calls[0].args["path"], "/etc/hosts");
+    }
 }

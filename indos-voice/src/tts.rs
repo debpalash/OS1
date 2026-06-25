@@ -183,3 +183,52 @@ fn parse_wav_to_f32(data: &[u8]) -> Result<Vec<f32>> {
         _ => anyhow::bail!("Unsupported WAV bit depth: {}", bits_per_sample),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Build a minimal 44-byte WAV header with the given bit depth, followed
+    /// by `data` bytes for the data chunk.
+    fn wav_with(bits_per_sample: u16, data: &[u8]) -> Vec<u8> {
+        let mut buf = vec![0u8; 44];
+        buf[34] = (bits_per_sample & 0xff) as u8;
+        buf[35] = (bits_per_sample >> 8) as u8;
+        buf.extend_from_slice(data);
+        buf
+    }
+
+    #[test]
+    fn parse_wav_rejects_too_small() {
+        let err = parse_wav_to_f32(&[0u8; 10]).unwrap_err();
+        assert!(err.to_string().contains("too small"));
+    }
+
+    #[test]
+    fn parse_wav_rejects_unsupported_bit_depth() {
+        let bytes = wav_with(24, &[]);
+        let err = parse_wav_to_f32(&bytes).unwrap_err();
+        assert!(err.to_string().contains("bit depth"));
+    }
+
+    #[test]
+    fn parse_wav_decodes_16bit_samples() {
+        // Two i16 samples: 0 and i16::MAX, little-endian.
+        let mut data = Vec::new();
+        data.extend_from_slice(&0i16.to_le_bytes());
+        data.extend_from_slice(&i16::MAX.to_le_bytes());
+        let bytes = wav_with(16, &data);
+        let samples = parse_wav_to_f32(&bytes).unwrap();
+        assert_eq!(samples.len(), 2);
+        assert!((samples[0] - 0.0).abs() < f32::EPSILON);
+        // i16::MAX / 32768 ≈ 0.99997.
+        assert!((samples[1] - (i16::MAX as f32 / 32768.0)).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn parse_wav_empty_data_yields_no_samples() {
+        let bytes = wav_with(16, &[]);
+        let samples = parse_wav_to_f32(&bytes).unwrap();
+        assert!(samples.is_empty());
+    }
+}

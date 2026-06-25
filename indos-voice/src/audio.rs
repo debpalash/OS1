@@ -144,3 +144,42 @@ pub async fn play_wav(path: &str, output_device: Option<&str>) -> Result<()> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn threshold_rms_endpoints() {
+        // 0.0 → bare floor; 1.0 → floor + full span.
+        assert!((threshold_rms(0.0) - 0.005).abs() < f32::EPSILON);
+        assert!((threshold_rms(1.0) - 0.035).abs() < 1e-6);
+        // The documented midpoint: 0.5 → 0.02.
+        assert!((threshold_rms(0.5) - 0.02).abs() < 1e-6);
+    }
+
+    #[test]
+    fn threshold_rms_clamps_out_of_range() {
+        // Values outside 0.0..=1.0 are clamped, never extrapolated.
+        assert_eq!(threshold_rms(-5.0), threshold_rms(0.0));
+        assert_eq!(threshold_rms(5.0), threshold_rms(1.0));
+    }
+
+    #[test]
+    fn threshold_rms_is_monotonic() {
+        assert!(threshold_rms(0.1) < threshold_rms(0.9));
+    }
+
+    #[test]
+    fn rms_of_silence_is_zero() {
+        assert_eq!(rms(&[]), 0.0);
+        assert_eq!(rms(&[0.0, 0.0, 0.0]), 0.0);
+    }
+
+    #[test]
+    fn rms_of_constant_signal_equals_amplitude() {
+        // RMS of a constant ±a square wave is |a|.
+        let signal = [0.5, -0.5, 0.5, -0.5];
+        assert!((rms(&signal) - 0.5).abs() < 1e-6);
+    }
+}

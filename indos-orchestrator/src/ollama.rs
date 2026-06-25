@@ -160,3 +160,47 @@ impl OllamaClient {
         &self.model
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_chat_message_roundtrip() {
+        let msg = ChatMessage {
+            role: "user".to_string(),
+            content: "what's the weather?".to_string(),
+        };
+        let json = serde_json::to_string(&msg).unwrap();
+        assert!(json.contains("\"role\":\"user\""));
+        let back: ChatMessage = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.role, "user");
+        assert_eq!(back.content, "what's the weather?");
+    }
+
+    #[test]
+    fn test_chat_chunk_parse_streaming_line() {
+        // Mimics a single newline-delimited JSON line from Ollama's /api/chat.
+        let line = r#"{"message":{"role":"assistant","content":"Hel"},"done":false}"#;
+        let chunk: ChatChunk = serde_json::from_str(line).unwrap();
+        assert!(!chunk.done);
+        let msg = chunk.message.expect("expected message");
+        assert_eq!(msg.role, "assistant");
+        assert_eq!(msg.content, "Hel");
+    }
+
+    #[test]
+    fn test_chat_chunk_parse_done_marker() {
+        // The terminal chunk often omits message content and sets done=true.
+        let line = r#"{"done":true}"#;
+        let chunk: ChatChunk = serde_json::from_str(line).unwrap();
+        assert!(chunk.done);
+        assert!(chunk.message.is_none());
+    }
+
+    #[test]
+    fn test_model_name_accessor() {
+        let client = OllamaClient::new("http://localhost:11434", "qwen2.5:0.5b");
+        assert_eq!(client.model_name(), "qwen2.5:0.5b");
+    }
+}
