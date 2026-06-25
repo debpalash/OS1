@@ -77,6 +77,7 @@ impl FragmentRegistry {
     }
 
     /// List all registered component names
+    #[allow(dead_code)] // public API, not yet wired into the shell
     pub fn list(&self) -> Vec<&str> {
         self.components.keys().map(|s| s.as_str()).collect()
     }

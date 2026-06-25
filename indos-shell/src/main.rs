@@ -115,6 +115,7 @@ enum Message {
     Connected,
 
     /// Disconnected
+    #[allow(dead_code)] // connection state, not yet constructed in M1
     Disconnected,
 }
 
@@ -240,7 +241,7 @@ fn update(shell: &mut IndOSShell, message: Message) -> Task<Message> {
     }
 }
 
-fn view(shell: &IndOSShell, _window: window::Id) -> Element<Message> {
+fn view(shell: &IndOSShell, _window: window::Id) -> Element<'_, Message> {
     // Build message list
     let messages: Column<Message> =
         shell
@@ -499,7 +500,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let settings = Settings {
-        layer_settings: layer_settings,
+        layer_settings,
         ..Default::default()
     };
 

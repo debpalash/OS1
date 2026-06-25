@@ -39,7 +39,7 @@ pub fn render<'a, M: 'a + Clone>(props: &serde_json::Value) -> Element<'a, M> {
                 .width(Length::Fixed(50.0))
                 .into();
 
-            let bar_bg: Element<'a, M> =
+            let _bar_bg: Element<'a, M> =
                 container(Space::new().width(Length::Fill).height(Length::Fixed(12.0)))
                     .width(Length::Fill)
                     .style(|_theme: &iced::Theme| container::Style {

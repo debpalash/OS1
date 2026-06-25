@@ -8,7 +8,7 @@
 //! Reads from /proc/stat, /proc/meminfo, /proc/mounts at render time.
 //! For M1 this is a static snapshot — live updating is M2 work.
 
-use iced::widget::{column, container, row, text};
+use iced::widget::{column, container, text};
 use iced::{Element, Length};
 
 /// Read memory info from /proc/meminfo
@@ -93,7 +93,7 @@ fn bar_text(label: &str, used: u64, total: u64, unit: &str) -> String {
 }
 
 pub fn render<'a, M: 'a + Clone>(props: &serde_json::Value) -> Element<'a, M> {
-    let show_cpu = props
+    let _show_cpu = props
         .get("show_cpu")
         .and_then(|v| v.as_bool())
         .unwrap_or(true);
