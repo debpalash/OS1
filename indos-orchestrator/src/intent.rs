@@ -53,37 +53,124 @@ pub enum IntentCategory {
 
 // Keyword sets for each category
 const FS_KEYWORDS: &[&str] = &[
-    "file", "folder", "directory", "ls", "list", "create", "delete", "move",
-    "copy", "rename", "open", "save", "find", "search file", "browse", "tree",
-    "cat", "read", "write", "edit", "path", "home", "desktop",
+    "file",
+    "folder",
+    "directory",
+    "ls",
+    "list",
+    "create",
+    "delete",
+    "move",
+    "copy",
+    "rename",
+    "open",
+    "save",
+    "find",
+    "search file",
+    "browse",
+    "tree",
+    "cat",
+    "read",
+    "write",
+    "edit",
+    "path",
+    "home",
+    "desktop",
 ];
 
 const SYS_KEYWORDS: &[&str] = &[
-    "install", "update", "upgrade", "package", "pacman", "service", "systemd",
-    "restart", "start", "stop", "enable", "disable", "status", "process",
-    "kill", "memory", "cpu", "disk", "system", "info", "uptime", "reboot",
-    "shutdown", "network", "wifi", "bluetooth", "volume", "brightness",
+    "install",
+    "update",
+    "upgrade",
+    "package",
+    "pacman",
+    "service",
+    "systemd",
+    "restart",
+    "start",
+    "stop",
+    "enable",
+    "disable",
+    "status",
+    "process",
+    "kill",
+    "memory",
+    "cpu",
+    "disk",
+    "system",
+    "info",
+    "uptime",
+    "reboot",
+    "shutdown",
+    "network",
+    "wifi",
+    "bluetooth",
+    "volume",
+    "brightness",
 ];
 
 const CODE_KEYWORDS: &[&str] = &[
-    "code", "function", "class", "debug", "compile", "build", "run",
-    "test", "refactor", "git", "commit", "push", "pull", "branch",
-    "error", "bug", "fix", "implement", "rust", "python", "javascript",
+    "code",
+    "function",
+    "class",
+    "debug",
+    "compile",
+    "build",
+    "run",
+    "test",
+    "refactor",
+    "git",
+    "commit",
+    "push",
+    "pull",
+    "branch",
+    "error",
+    "bug",
+    "fix",
+    "implement",
+    "rust",
+    "python",
+    "javascript",
 ];
 
 const INFO_KEYWORDS: &[&str] = &[
-    "what is", "explain", "how to", "why", "tell me", "describe",
-    "summarize", "compare", "difference", "meaning", "definition",
+    "what is",
+    "explain",
+    "how to",
+    "why",
+    "tell me",
+    "describe",
+    "summarize",
+    "compare",
+    "difference",
+    "meaning",
+    "definition",
 ];
 
 const MEDIA_KEYWORDS: &[&str] = &[
-    "play", "music", "video", "audio", "image", "photo", "screenshot",
-    "record", "stream", "convert", "resize",
+    "play",
+    "music",
+    "video",
+    "audio",
+    "image",
+    "photo",
+    "screenshot",
+    "record",
+    "stream",
+    "convert",
+    "resize",
 ];
 
 const VOICE_KEYWORDS: &[&str] = &[
-    "voice", "speak", "listen", "mute", "unmute", "dictation",
-    "speech", "microphone", "mic",
+    "voice",
+    "speak",
+    "listen",
+    "mute",
+    "unmute",
+    "dictation",
+    "speech",
+    "microphone",
+    "mic",
 ];
 
 /// Classify user input into an intent (keyword-based heuristic)
@@ -103,10 +190,7 @@ pub fn classify(input: &str) -> Intent {
     ];
 
     for (category, keywords) in checks {
-        let matches = keywords
-            .iter()
-            .filter(|kw| lower.contains(*kw))
-            .count();
+        let matches = keywords.iter().filter(|kw| lower.contains(*kw)).count();
 
         if matches > 0 {
             let score = matches as f32 / keywords.len() as f32;

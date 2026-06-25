@@ -39,8 +39,7 @@ impl TtsEngine {
                 .output()
                 .await
             {
-                if out.status.success()
-                    && String::from_utf8_lossy(&out.stdout).contains("--model")
+                if out.status.success() && String::from_utf8_lossy(&out.stdout).contains("--model")
                 {
                     return Some(path.to_string());
                 }
@@ -104,16 +103,21 @@ impl TtsEngine {
 
     /// Synthesize text to a WAV file
     pub async fn synthesize_to_file(&self, text: &str, output_path: &str) -> Result<()> {
-        let piper = self.piper_path.as_deref()
+        let piper = self
+            .piper_path
+            .as_deref()
             .ok_or_else(|| anyhow::anyhow!("Piper not installed"))?;
         let model = Self::resolve_voice(&self.voice)
             .ok_or_else(|| anyhow::anyhow!("voice model '{}' not found", self.voice))?;
 
         let output = Command::new(piper)
             .args([
-                "--model", &model.to_string_lossy(),
-                "--output_file", output_path,
-                "--length_scale", &format!("{:.2}", 1.0 / self.rate),
+                "--model",
+                &model.to_string_lossy(),
+                "--output_file",
+                output_path,
+                "--length_scale",
+                &format!("{:.2}", 1.0 / self.rate),
             ])
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())

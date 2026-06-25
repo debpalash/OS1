@@ -137,9 +137,7 @@ impl ContextEngine {
 
     /// Create the memories table with schema
     async fn create_memories_table(&self, db: &lancedb::Connection) -> Result<()> {
-        use arrow_array::{
-            RecordBatch, RecordBatchIterator,
-        };
+        use arrow_array::{RecordBatch, RecordBatchIterator};
         use arrow_schema::{DataType, Field, Schema};
         use std::sync::Arc;
 
@@ -162,7 +160,9 @@ impl ContextEngine {
         // Create empty table with schema
         let batch = RecordBatch::new_empty(schema.clone());
         let batches = RecordBatchIterator::new(vec![Ok(batch)], schema);
-        db.create_table("memories", Box::new(batches)).execute().await?;
+        db.create_table("memories", Box::new(batches))
+            .execute()
+            .await?;
 
         tracing::info!("Memories table created (vector dim: {})", EMBED_DIM);
         Ok(())
@@ -201,21 +201,28 @@ impl ContextEngine {
 
     /// Store a new memory with embedding
     pub async fn remember(&self, entry: MemoryEntry) -> Result<()> {
-        let db = self.db.as_ref().ok_or_else(|| anyhow::anyhow!("Not initialized"))?;
+        let db = self
+            .db
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not initialized"))?;
 
         // Generate embedding
         let embedding = match self.embed(&entry.content).await {
             Ok(e) => e,
             Err(e) => {
-                tracing::warn!("Embedding failed ({}), storing without vector: {}", self.embedding_model, e);
+                tracing::warn!(
+                    "Embedding failed ({}), storing without vector: {}",
+                    self.embedding_model,
+                    e
+                );
                 vec![0.0f32; EMBED_DIM]
             }
         };
 
         // Build record batch
         use arrow_array::{
-            Float32Array, RecordBatch, RecordBatchIterator, StringArray,
-            FixedSizeListArray, ArrayRef,
+            ArrayRef, FixedSizeListArray, Float32Array, RecordBatch, RecordBatchIterator,
+            StringArray,
         };
         use arrow_schema::{DataType, Field, Schema};
 
@@ -261,7 +268,10 @@ impl ContextEngine {
 
     /// Search memories by semantic similarity
     pub async fn recall(&self, query: &str, limit: usize) -> Result<Vec<ContextResult>> {
-        let db = self.db.as_ref().ok_or_else(|| anyhow::anyhow!("Not initialized"))?;
+        let db = self
+            .db
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not initialized"))?;
 
         // Embed query
         let query_embedding = self.embed(query).await?;
@@ -284,7 +294,10 @@ impl ContextEngine {
             let ids = batch.column_by_name("id").unwrap().as_string::<i32>();
             let contents = batch.column_by_name("content").unwrap().as_string::<i32>();
             let sources = batch.column_by_name("source").unwrap().as_string::<i32>();
-            let timestamps = batch.column_by_name("timestamp").unwrap().as_string::<i32>();
+            let timestamps = batch
+                .column_by_name("timestamp")
+                .unwrap()
+                .as_string::<i32>();
             let distances = batch
                 .column_by_name("_distance")
                 .and_then(|c| c.as_any().downcast_ref::<arrow_array::Float32Array>());
@@ -320,14 +333,13 @@ impl ContextEngine {
 
     /// Get recent memories (last N)
     pub async fn recent(&self, limit: usize) -> Result<Vec<MemoryEntry>> {
-        let db = self.db.as_ref().ok_or_else(|| anyhow::anyhow!("Not initialized"))?;
+        let db = self
+            .db
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not initialized"))?;
 
         let table = db.open_table("memories").execute().await?;
-        let results = table
-            .query()
-            .limit(limit)
-            .execute()
-            .await?;
+        let results = table.query().limit(limit).execute().await?;
 
         use arrow_array::cast::AsArray;
         use futures::TryStreamExt;
@@ -339,7 +351,10 @@ impl ContextEngine {
             let ids = batch.column_by_name("id").unwrap().as_string::<i32>();
             let contents = batch.column_by_name("content").unwrap().as_string::<i32>();
             let sources = batch.column_by_name("source").unwrap().as_string::<i32>();
-            let timestamps = batch.column_by_name("timestamp").unwrap().as_string::<i32>();
+            let timestamps = batch
+                .column_by_name("timestamp")
+                .unwrap()
+                .as_string::<i32>();
 
             for i in 0..batch.num_rows() {
                 let source = match sources.value(i) {
@@ -364,7 +379,10 @@ impl ContextEngine {
 
     /// Count total memories
     pub async fn count(&self) -> Result<usize> {
-        let db = self.db.as_ref().ok_or_else(|| anyhow::anyhow!("Not initialized"))?;
+        let db = self
+            .db
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Not initialized"))?;
         let table = db.open_table("memories").execute().await?;
         let count = table.count_rows(None).await?;
         Ok(count)

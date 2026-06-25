@@ -9,9 +9,9 @@
 //! 6. Synthesize via TTS
 //! 7. Play audio
 
-use anyhow::Result;
 use crate::stt::SttEngine;
 use crate::tts::TtsEngine;
+use anyhow::Result;
 use std::path::PathBuf;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;

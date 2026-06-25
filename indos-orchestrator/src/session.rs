@@ -70,22 +70,24 @@ impl SessionManager {
 
             // Auto-title from first user message
             if session.title.is_none() {
-                session.title = messages.iter()
-                    .find(|m| m.role == "user")
-                    .map(|m| {
-                        let title: String = m.content.chars().take(60).collect();
-                        if m.content.len() > 60 {
-                            format!("{}...", title)
-                        } else {
-                            title
-                        }
-                    });
+                session.title = messages.iter().find(|m| m.role == "user").map(|m| {
+                    let title: String = m.content.chars().take(60).collect();
+                    if m.content.len() > 60 {
+                        format!("{}...", title)
+                    } else {
+                        title
+                    }
+                });
             }
 
             let path = self.sessions_dir.join(format!("{}.json", session_id));
             let json = serde_json::to_string_pretty(&session)?;
             std::fs::write(&path, json)?;
-            tracing::debug!("Session saved: {} ({} messages)", session_id, messages.len());
+            tracing::debug!(
+                "Session saved: {} ({} messages)",
+                session_id,
+                messages.len()
+            );
         }
         Ok(())
     }
@@ -103,7 +105,11 @@ impl SessionManager {
             self.sessions.push(session);
         }
 
-        tracing::info!("Session loaded: {} ({} messages)", session_id, messages.len());
+        tracing::info!(
+            "Session loaded: {} ({} messages)",
+            session_id,
+            messages.len()
+        );
         Ok(messages)
     }
 
@@ -113,10 +119,10 @@ impl SessionManager {
         if let Ok(entries) = std::fs::read_dir(&self.sessions_dir) {
             let mut newest: Option<(PathBuf, std::time::SystemTime)> = None;
             for entry in entries.flatten() {
-                if entry.path().extension().map_or(false, |e| e == "json") {
+                if entry.path().extension().is_some_and(|e| e == "json") {
                     if let Ok(meta) = entry.metadata() {
                         if let Ok(modified) = meta.modified() {
-                            if newest.as_ref().map_or(true, |(_, t)| modified > *t) {
+                            if newest.as_ref().is_none_or(|(_, t)| modified > *t) {
                                 newest = Some((entry.path(), modified));
                             }
                         }
@@ -143,7 +149,7 @@ impl SessionManager {
         let mut sessions = Vec::new();
         if let Ok(entries) = std::fs::read_dir(&self.sessions_dir) {
             for entry in entries.flatten() {
-                if entry.path().extension().map_or(false, |e| e == "json") {
+                if entry.path().extension().is_some_and(|e| e == "json") {
                     if let Ok(json) = std::fs::read_to_string(entry.path()) {
                         if let Ok(session) = serde_json::from_str::<Session>(&json) {
                             sessions.push((session.id, session.title, session.message_count));
@@ -155,12 +161,15 @@ impl SessionManager {
         sessions
     }
 
+    // session accessors, part of the manager's public API surface, not yet wired up
+    #[allow(dead_code)]
     pub fn active_session(&self) -> Option<&Session> {
         self.active_session_id
             .as_ref()
             .and_then(|id| self.sessions.iter().find(|s| &s.id == id))
     }
 
+    #[allow(dead_code)]
     pub fn active_session_id(&self) -> Option<&str> {
         self.active_session_id.as_deref()
     }

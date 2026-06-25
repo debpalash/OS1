@@ -1,5 +1,5 @@
 //! STT — Speech-to-Text via Faster-Whisper subprocess
-//! 
+//!
 //! Faster-Whisper is run as a Python subprocess that:
 //! 1. Accepts WAV audio on stdin
 //! 2. Returns JSON transcripts on stdout
@@ -8,11 +8,12 @@
 
 use anyhow::{Context, Result};
 use std::process::Stdio;
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{Child, Command};
 
 pub struct SttEngine {
     model: String,
+    // holds the persistent whisper subprocess; not yet wired up
+    #[allow(dead_code)]
     process: Option<Child>,
     ready: bool,
 }
@@ -40,12 +41,13 @@ impl SttEngine {
 
     /// Initialize — verify faster-whisper is installed and model exists
     pub async fn init(&mut self) -> Result<()> {
-        tracing::info!("Initializing STT engine (Faster-Whisper, model: {})", self.model);
+        tracing::info!(
+            "Initializing STT engine (Faster-Whisper, model: {})",
+            self.model
+        );
 
         if !Self::check_available().await {
-            anyhow::bail!(
-                "faster-whisper not found. Install with: pip install faster-whisper"
-            );
+            anyhow::bail!("faster-whisper not found. Install with: pip install faster-whisper");
         }
 
         self.ready = true;
@@ -86,13 +88,16 @@ print(json.dumps({{"text": text, "language": info.language, "duration": info.dur
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let result: serde_json::Value = serde_json::from_str(stdout.trim())
-            .context("Failed to parse STT output")?;
+        let result: serde_json::Value =
+            serde_json::from_str(stdout.trim()).context("Failed to parse STT output")?;
 
         let text = result["text"].as_str().unwrap_or("").to_string();
-        tracing::debug!("STT: \"{}\" ({}s, {})", text, 
+        tracing::debug!(
+            "STT: \"{}\" ({}s, {})",
+            text,
             result["duration"].as_f64().unwrap_or(0.0),
-            result["language"].as_str().unwrap_or("?"));
+            result["language"].as_str().unwrap_or("?")
+        );
 
         Ok(text)
     }
@@ -128,19 +133,19 @@ fn write_wav(path: &str, samples: &[f32], sample_rate: u32) -> Result<()> {
     file.write_all(&file_size.to_le_bytes())?;
     file.write_all(b"WAVE")?;
     file.write_all(b"fmt ")?;
-    file.write_all(&16u32.to_le_bytes())?;  // chunk size
-    file.write_all(&1u16.to_le_bytes())?;   // PCM format
-    file.write_all(&1u16.to_le_bytes())?;   // mono
+    file.write_all(&16u32.to_le_bytes())?; // chunk size
+    file.write_all(&1u16.to_le_bytes())?; // PCM format
+    file.write_all(&1u16.to_le_bytes())?; // mono
     file.write_all(&sample_rate.to_le_bytes())?;
     file.write_all(&byte_rate.to_le_bytes())?;
-    file.write_all(&2u16.to_le_bytes())?;   // block align
-    file.write_all(&16u16.to_le_bytes())?;  // bits per sample
+    file.write_all(&2u16.to_le_bytes())?; // block align
+    file.write_all(&16u16.to_le_bytes())?; // bits per sample
     file.write_all(b"data")?;
     file.write_all(&data_size.to_le_bytes())?;
 
     // Convert f32 → i16 and write
     for &s in samples {
-        let clamped = s.max(-1.0).min(1.0);
+        let clamped = s.clamp(-1.0, 1.0);
         let i16_val = (clamped * 32767.0) as i16;
         file.write_all(&i16_val.to_le_bytes())?;
     }

@@ -64,10 +64,7 @@ impl OllamaClient {
         match self.client.get(&url).send().await {
             Ok(resp) => {
                 let list: ModelListResponse = resp.json().await?;
-                let available = list
-                    .models
-                    .iter()
-                    .any(|m| m.name.starts_with(&self.model));
+                let available = list.models.iter().any(|m| m.name.starts_with(&self.model));
                 if !available {
                     tracing::warn!(
                         "Model '{}' not found. Available: {:?}",
@@ -97,15 +94,14 @@ impl OllamaClient {
     }
 
     /// Send a chat message and stream the response, calling `on_chunk` for each token
-    pub async fn chat_stream<F>(
-        &self,
-        messages: &[ChatMessage],
-        on_chunk: F,
-    ) -> Result<String>
+    // convenience wrapper over chat_stream_with_model, part of public API surface
+    #[allow(dead_code)]
+    pub async fn chat_stream<F>(&self, messages: &[ChatMessage], on_chunk: F) -> Result<String>
     where
         F: FnMut(&str),
     {
-        self.chat_stream_with_model(&self.model, messages, on_chunk).await
+        self.chat_stream_with_model(&self.model, messages, on_chunk)
+            .await
     }
 
     /// Like chat_stream but allows overriding the model per-request

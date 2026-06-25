@@ -44,21 +44,31 @@ pub fn select_model(intent: &Intent, available_models: &[String]) -> ModelSelect
 
     // Find best available model for the tier
     let model = match preferred {
-        ModelTier::Small => find_model(available_models, &[
-            "qwen2.5:0.5b", "qwen2.5:1.5b", "phi3:mini", "gemma2:2b",
-        ]),
-        ModelTier::Medium => find_model(available_models, &[
-            "qwen2.5:7b", "llama3.1:8b", "mistral:7b", "gemma2:9b",
-        ]),
-        ModelTier::Large => find_model(available_models, &[
-            "qwen2.5:32b", "llama3.1:70b", "mixtral:8x7b",
-        ]),
-        ModelTier::Code => find_model(available_models, &[
-            "qwen2.5-coder:7b", "codellama:7b", "deepseek-coder:6.7b", "qwen2.5:7b",
-        ]),
-        ModelTier::Vision => find_model(available_models, &[
-            "qwen2.5-vl:7b", "llava:7b", "bakllava:7b",
-        ]),
+        ModelTier::Small => find_model(
+            available_models,
+            &["qwen2.5:0.5b", "qwen2.5:1.5b", "phi3:mini", "gemma2:2b"],
+        ),
+        ModelTier::Medium => find_model(
+            available_models,
+            &["qwen2.5:7b", "llama3.1:8b", "mistral:7b", "gemma2:9b"],
+        ),
+        ModelTier::Large => find_model(
+            available_models,
+            &["qwen2.5:32b", "llama3.1:70b", "mixtral:8x7b"],
+        ),
+        ModelTier::Code => find_model(
+            available_models,
+            &[
+                "qwen2.5-coder:7b",
+                "codellama:7b",
+                "deepseek-coder:6.7b",
+                "qwen2.5:7b",
+            ],
+        ),
+        ModelTier::Vision => find_model(
+            available_models,
+            &["qwen2.5-vl:7b", "llava:7b", "bakllava:7b"],
+        ),
     };
 
     ModelSelection {
@@ -87,6 +97,8 @@ pub enum AgentTarget {
     System,
 
     /// External coding agent
+    // agent name is part of the domain model, not yet read
+    #[allow(dead_code)]
     CodingAgent(String),
 }
 
@@ -97,13 +109,15 @@ impl AgentTarget {
     }
 }
 
+// model tiers form the routing domain model; not all are constructed yet
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum ModelTier {
-    Small,   // <2B params — chat, simple Q&A
-    Medium,  // 7-9B params — reasoning, info
-    Large,   // 32B+ params — complex analysis
-    Code,    // Code-specialized models
-    Vision,  // Vision-language models
+    Small,  // <2B params — chat, simple Q&A
+    Medium, // 7-9B params — reasoning, info
+    Large,  // 32B+ params — complex analysis
+    Code,   // Code-specialized models
+    Vision, // Vision-language models
 }
 
 #[derive(Debug, Clone)]

@@ -27,10 +27,10 @@
 mod fragments;
 
 use fragments::registry::{FragmentDescriptor, FragmentRegistry};
-use iced::widget::{column, container, row, scrollable, text, text_input, Column};
-use iced::{Element, Length, Task, Theme};
 use iced::futures::SinkExt;
+use iced::widget::{column, container, row, scrollable, text, text_input, Column};
 use iced::window;
+use iced::{Element, Length, Task, Theme};
 use iced_layershell::actions::LayerShellCustomActionWithId;
 use iced_layershell::build_pattern::daemon;
 use iced_layershell::reexport::{Anchor, KeyboardInteractivity, Layer};
@@ -146,7 +146,9 @@ impl IndOSShell {
     fn new() -> Self {
         let runtime_dir = std::env::var("XDG_RUNTIME_DIR")
             .unwrap_or_else(|_| format!("/run/user/{}", unsafe { libc::getuid() }));
-        let socket_path = PathBuf::from(runtime_dir).join("indos").join("orchestrator.sock");
+        let socket_path = PathBuf::from(runtime_dir)
+            .join("indos")
+            .join("orchestrator.sock");
 
         Self {
             input: String::new(),
@@ -164,86 +166,84 @@ impl IndOSShell {
 }
 
 fn update(shell: &mut IndOSShell, message: Message) -> Task<Message> {
-        match message {
-            Message::InputChanged(value) => {
-                shell.input = value;
-                Task::none()
+    match message {
+        Message::InputChanged(value) => {
+            shell.input = value;
+            Task::none()
+        }
+
+        Message::Submit => {
+            let content = shell.input.trim().to_string();
+            if content.is_empty() || shell.is_generating {
+                return Task::none();
             }
 
-            Message::Submit => {
-                let content = shell.input.trim().to_string();
-                if content.is_empty() || shell.is_generating {
-                    return Task::none();
-                }
+            // Add user message
+            shell.messages.push(ConversationMessage {
+                role: MessageRole::User,
+                content: content.clone(),
+            });
+            shell.input.clear();
+            shell.is_generating = true;
+            shell.streaming_buffer.clear();
 
-                // Add user message
-                shell.messages.push(ConversationMessage {
-                    role: MessageRole::User,
-                    content: content.clone(),
-                });
-                shell.input.clear();
-                shell.is_generating = true;
-                shell.streaming_buffer.clear();
+            // Stream from orchestrator
+            let socket_path = shell.socket_path.clone();
+            Task::run(stream_from_orchestrator(socket_path, content), |msg| msg)
+        }
 
-                // Stream from orchestrator
-                let socket_path = shell.socket_path.clone();
-                Task::run(
-                    stream_from_orchestrator(socket_path, content),
-                    |msg| msg,
-                )
-            }
+        Message::StreamChunk(chunk) => {
+            shell.streaming_buffer.push_str(&chunk);
+            Task::none()
+        }
 
-            Message::StreamChunk(chunk) => {
-                shell.streaming_buffer.push_str(&chunk);
-                Task::none()
-            }
+        Message::FragmentReceived(descriptor) => {
+            shell.messages.push(ConversationMessage {
+                role: MessageRole::Fragment(descriptor),
+                content: String::new(),
+            });
+            Task::none()
+        }
 
-            Message::FragmentReceived(descriptor) => {
-                shell.messages.push(ConversationMessage {
-                    role: MessageRole::Fragment(descriptor),
-                    content: String::new(),
-                });
-                Task::none()
-            }
+        Message::StreamDone(response) => {
+            shell.messages.push(ConversationMessage {
+                role: MessageRole::Assistant,
+                content: if shell.streaming_buffer.is_empty() {
+                    response
+                } else {
+                    shell.streaming_buffer.clone()
+                },
+            });
+            shell.streaming_buffer.clear();
+            shell.is_generating = false;
+            Task::none()
+        }
 
-            Message::StreamDone(response) => {
-                shell.messages.push(ConversationMessage {
-                    role: MessageRole::Assistant,
-                    content: if shell.streaming_buffer.is_empty() {
-                        response
-                    } else {
-                        shell.streaming_buffer.clone()
-                    },
-                });
-                shell.streaming_buffer.clear();
-                shell.is_generating = false;
-                Task::none()
-            }
+        Message::OrchestratorError(err) => {
+            shell.messages.push(ConversationMessage {
+                role: MessageRole::System,
+                content: format!("⚠ {}", err),
+            });
+            shell.is_generating = false;
+            Task::none()
+        }
 
-            Message::OrchestratorError(err) => {
-                shell.messages.push(ConversationMessage {
-                    role: MessageRole::System,
-                    content: format!("⚠ {}", err),
-                });
-                shell.is_generating = false;
-                Task::none()
-            }
+        Message::Connected => {
+            shell.connected = true;
+            Task::none()
+        }
 
-            Message::Connected => {
-                shell.connected = true;
-                Task::none()
-            }
-
-            Message::Disconnected => {
-                shell.connected = false;
-                Task::none()
-            }
+        Message::Disconnected => {
+            shell.connected = false;
+            Task::none()
         }
     }
+}
 
 fn view(shell: &IndOSShell, _window: window::Id) -> Element<Message> {
-        // Build message list
-        let messages: Column<Message> = shell
+    // Build message list
+    let messages: Column<Message> =
+        shell
             .messages
             .iter()
             .fold(Column::new().spacing(8), |col, msg| {
@@ -268,102 +268,103 @@ fn view(shell: &IndOSShell, _window: window::Id) -> Element<Message> {
                 }
             });
 
-        // Add streaming buffer if generating
-        let messages = if !shell.streaming_buffer.is_empty() {
-            messages.push(
-                text(format!("◇ {}▌", shell.streaming_buffer))
-                    .size(16)
-                    .color(iced::Color::from_rgb(0.6, 1.0, 0.6)),
-            )
-        } else if shell.is_generating {
-            messages.push(
-                text("◇ thinking...")
-                    .size(16)
-                    .color(iced::Color::from_rgb(0.4, 0.4, 0.5)),
-            )
-        } else {
-            messages
-        };
+    // Add streaming buffer if generating
+    let messages = if !shell.streaming_buffer.is_empty() {
+        messages.push(
+            text(format!("◇ {}▌", shell.streaming_buffer))
+                .size(16)
+                .color(iced::Color::from_rgb(0.6, 1.0, 0.6)),
+        )
+    } else if shell.is_generating {
+        messages.push(
+            text("◇ thinking...")
+                .size(16)
+                .color(iced::Color::from_rgb(0.4, 0.4, 0.5)),
+        )
+    } else {
+        messages
+    };
 
-        // Scrollable message area
-        let conversation = scrollable(messages.width(Length::Fill).padding(16))
-            .height(Length::Fill);
+    // Scrollable message area
+    let conversation = scrollable(messages.width(Length::Fill).padding(16)).height(Length::Fill);
 
-        // Input bar
-        let input = text_input("Ask IndOS anything...", &shell.input)
-            .on_input(Message::InputChanged)
-            .on_submit(Message::Submit)
-            .padding(12)
-            .size(16);
+    // Input bar
+    let input = text_input("Ask IndOS anything...", &shell.input)
+        .on_input(Message::InputChanged)
+        .on_submit(Message::Submit)
+        .padding(12)
+        .size(16);
 
-        // Status indicator
-        let status = text(if shell.connected {
-            "● Connected"
-        } else {
-            "○ Disconnected"
-        })
-        .size(12)
-        .color(if shell.connected {
-            iced::Color::from_rgb(0.3, 0.9, 0.3)
-        } else {
-            iced::Color::from_rgb(0.9, 0.3, 0.3)
-        });
+    // Status indicator
+    let status = text(if shell.connected {
+        "● Connected"
+    } else {
+        "○ Disconnected"
+    })
+    .size(12)
+    .color(if shell.connected {
+        iced::Color::from_rgb(0.3, 0.9, 0.3)
+    } else {
+        iced::Color::from_rgb(0.9, 0.3, 0.3)
+    });
 
-        let header = row![
-            text("IndOS").size(18).color(iced::Color::from_rgb(0.6, 0.8, 1.0)),
-            iced::widget::Space::new().width(Length::Fill),
-            status,
+    let header = row![
+        text("IndOS")
+            .size(18)
+            .color(iced::Color::from_rgb(0.6, 0.8, 1.0)),
+        iced::widget::Space::new().width(Length::Fill),
+        status,
+    ]
+    .padding(8);
+
+    // Check if we should render ambient mode
+    let is_ambient = shell.messages.len() <= 1 && shell.input.is_empty() && !shell.is_generating;
+
+    // Main layout
+    let content: Element<Message> = if is_ambient {
+        // Ambient view
+        let time_text = text(chrono::Local::now().format("%H:%M").to_string())
+            .size(72)
+            .color(iced::Color::from_rgb(0.9, 0.9, 0.95));
+        let date_text = text(chrono::Local::now().format("%A, %B %d").to_string())
+            .size(24)
+            .color(iced::Color::from_rgb(0.6, 0.6, 0.7));
+        let greeting = text("Good to see you. How can I help?")
+            .size(18)
+            .color(iced::Color::from_rgb(0.5, 0.7, 0.9));
+
+        let ambient_center = column![
+            time_text,
+            date_text,
+            iced::widget::Space::new().height(Length::Fixed(40.0)),
+            greeting
         ]
-        .padding(8);
+        .align_x(iced::Alignment::Center)
+        .spacing(8);
 
-        // Check if we should render ambient mode
-        let is_ambient = shell.messages.len() <= 1 && shell.input.is_empty() && !shell.is_generating;
-
-        // Main layout
-        let content: Element<Message> = if is_ambient {
-            // Ambient view
-            let time_text = text(chrono::Local::now().format("%H:%M").to_string())
-                .size(72)
-                .color(iced::Color::from_rgb(0.9, 0.9, 0.95));
-            let date_text = text(chrono::Local::now().format("%A, %B %d").to_string())
-                .size(24)
-                .color(iced::Color::from_rgb(0.6, 0.6, 0.7));
-            let greeting = text("Good to see you. How can I help?")
-                .size(18)
-                .color(iced::Color::from_rgb(0.5, 0.7, 0.9));
-
-            let ambient_center = column![
-                time_text,
-                date_text,
-                iced::widget::Space::new().height(Length::Fixed(40.0)),
-                greeting
-            ]
-            .align_x(iced::Alignment::Center)
-            .spacing(8);
-
-            let ambient_container = container(ambient_center)
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .center_x(Length::Fill)
-                .center_y(Length::Fill);
-
-            column![header, ambient_container, input].spacing(4).into()
-        } else {
-            // Chat view
-            column![header, conversation, input].spacing(4).into()
-        };
-
-        container(content)
+        let ambient_container = container(ambient_center)
             .width(Length::Fill)
             .height(Length::Fill)
-            .style(|_theme: &Theme| container::Style {
-                background: Some(iced::Background::Color(iced::Color::from_rgb(
-                    0.08, 0.08, 0.1,
-                ))),
-                ..Default::default()
-            })
-            .into()
-    }
+            .center_x(Length::Fill)
+            .center_y(Length::Fill);
+
+        column![header, ambient_container, input].spacing(4).into()
+    } else {
+        // Chat view
+        column![header, conversation, input].spacing(4).into()
+    };
+
+    container(content)
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .style(|_theme: &Theme| container::Style {
+            background: Some(iced::Background::Color(iced::Color::from_rgb(
+                0.08, 0.08, 0.1,
+            ))),
+            ..Default::default()
+        })
+        .into()
+}
 
 // TryInto impl required by iced_layershell
 impl TryInto<LayerShellCustomActionWithId> for Message {
@@ -468,8 +469,7 @@ fn stream_from_orchestrator(
                         if let Ok(descriptor) =
                             serde_json::from_value::<FragmentDescriptor>(fragment)
                         {
-                            let _ =
-                                sender.send(Message::FragmentReceived(descriptor)).await;
+                            let _ = sender.send(Message::FragmentReceived(descriptor)).await;
                         }
                     }
                     _ => {}

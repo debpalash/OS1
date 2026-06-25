@@ -74,9 +74,7 @@ pub enum OrchestratorMessage {
 
     /// List of saved sessions
     #[serde(rename = "session_list")]
-    SessionList {
-        sessions: Vec<SessionInfo>,
-    },
+    SessionList { sessions: Vec<SessionInfo> },
 }
 
 /// Session metadata sent to the shell
@@ -210,10 +208,13 @@ async fn handle_connection(
 }
 
 /// IPC client (used by indos-shell to connect to orchestrator)
+// part of the public API surface consumed by indos-shell, not wired up in-workspace
+#[allow(dead_code)]
 pub struct IpcClient {
     socket_path: PathBuf,
 }
 
+#[allow(dead_code)]
 impl IpcClient {
     pub fn new() -> Self {
         Self {
@@ -228,10 +229,7 @@ impl IpcClient {
     }
 
     /// Send a message and receive streaming responses
-    pub async fn send(
-        &self,
-        msg: &ShellMessage,
-    ) -> Result<mpsc::Receiver<OrchestratorMessage>> {
+    pub async fn send(&self, msg: &ShellMessage) -> Result<mpsc::Receiver<OrchestratorMessage>> {
         let stream = UnixStream::connect(&self.socket_path).await?;
         let (reader, mut writer) = stream.into_split();
 

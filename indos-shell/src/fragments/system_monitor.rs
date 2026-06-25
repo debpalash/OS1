@@ -53,7 +53,10 @@ fn read_disk_usage() -> (u64, u64) {
         if libc::statvfs(path.as_ptr(), &mut stat) == 0 {
             let total = stat.f_blocks * stat.f_frsize;
             let free = stat.f_bfree * stat.f_frsize;
-            (total / (1024 * 1024 * 1024), (total - free) / (1024 * 1024 * 1024))
+            (
+                total / (1024 * 1024 * 1024),
+                (total - free) / (1024 * 1024 * 1024),
+            )
         } else {
             (0, 0)
         }
@@ -83,19 +86,29 @@ fn bar_text(label: &str, used: u64, total: u64, unit: &str) -> String {
     let bar_width = 20;
     let filled = (pct as usize * bar_width) / 100;
     let bar: String = "█".repeat(filled) + &"░".repeat(bar_width - filled);
-    format!("{}: [{}] {}/{} {} ({}%)", label, bar, used, total, unit, pct)
+    format!(
+        "{}: [{}] {}/{} {} ({}%)",
+        label, bar, used, total, unit, pct
+    )
 }
 
 pub fn render<'a, M: 'a + Clone>(props: &serde_json::Value) -> Element<'a, M> {
-    let show_cpu = props.get("show_cpu").and_then(|v| v.as_bool()).unwrap_or(true);
-    let show_memory = props.get("show_memory").and_then(|v| v.as_bool()).unwrap_or(true);
-    let show_disk = props.get("show_disk").and_then(|v| v.as_bool()).unwrap_or(true);
+    let show_cpu = props
+        .get("show_cpu")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true);
+    let show_memory = props
+        .get("show_memory")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true);
+    let show_disk = props
+        .get("show_disk")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true);
 
-    let mut col = column![
-        text("◆ System Monitor")
-            .size(15)
-            .color(iced::Color::from_rgb(0.5, 0.8, 1.0)),
-    ]
+    let mut col = column![text("◆ System Monitor")
+        .size(15)
+        .color(iced::Color::from_rgb(0.5, 0.8, 1.0)),]
     .spacing(6)
     .padding(12)
     .width(Length::Fill);

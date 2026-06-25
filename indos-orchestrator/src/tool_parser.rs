@@ -91,7 +91,11 @@ pub async fn execute_tool_calls(calls: &[ToolCall], security: &SecurityEngine) -
         results.push_str(&format!(
             "Tool `{}` {}:\n{}\n",
             call.tool,
-            if result.success { "succeeded" } else { "failed" },
+            if result.success {
+                "succeeded"
+            } else {
+                "failed"
+            },
             result.output
         ));
 
