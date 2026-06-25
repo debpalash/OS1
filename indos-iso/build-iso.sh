@@ -73,28 +73,27 @@ if [[ "${INDOS_SKIP_CARGO:-}" == "1" ]]; then
     echo "[2/5] Skipping cargo build (sources unchanged)..."
 else
     echo "[2/5] Building release binaries..."
+    # indos-orchestrator and indos-voice are members of the root Cargo
+    # workspace (shared $PROJECT_ROOT/target/); indos-shell is a separate
+    # workspace root with its own target/. Build the workspace binaries in a
+    # single invocation, and the shell on its own — the two groups use
+    # different target dirs, so they can run in parallel without contending
+    # on cargo's per-target build lock.
     if [[ -n "${SUDO_USER:-}" ]]; then
         echo "    Building as $SUDO_USER (parallel)..."
-        # Build both crates in parallel
-        sudo -u "$SUDO_USER" bash -c "cd '$PROJECT_ROOT/indos-orchestrator' && cargo build --release" &
-        PID_ORCH=$!
+        sudo -u "$SUDO_USER" bash -c "cd '$PROJECT_ROOT' && cargo build --release -p indos-orchestrator -p indos-voice" &
+        PID_WS=$!
         sudo -u "$SUDO_USER" bash -c "cd '$PROJECT_ROOT/indos-shell' && cargo build --release" &
         PID_SHELL=$!
-        sudo -u "$SUDO_USER" bash -c "cd '$PROJECT_ROOT/indos-voice' && cargo build --release" &
-        PID_VOICE=$!
-        wait $PID_ORCH || { echo "ERROR: orchestrator build failed"; exit 1; }
+        wait $PID_WS || { echo "ERROR: orchestrator/voice build failed"; exit 1; }
         wait $PID_SHELL || { echo "ERROR: shell build failed"; exit 1; }
-        wait $PID_VOICE || { echo "ERROR: voice daemon build failed"; exit 1; }
     else
-        (cd "$PROJECT_ROOT/indos-orchestrator" && cargo build --release) &
-        PID_ORCH=$!
+        (cd "$PROJECT_ROOT" && cargo build --release -p indos-orchestrator -p indos-voice) &
+        PID_WS=$!
         (cd "$PROJECT_ROOT/indos-shell" && cargo build --release) &
         PID_SHELL=$!
-        (cd "$PROJECT_ROOT/indos-voice" && cargo build --release) &
-        PID_VOICE=$!
-        wait $PID_ORCH || exit 1
+        wait $PID_WS || exit 1
         wait $PID_SHELL || exit 1
-        wait $PID_VOICE || exit 1
     fi
 fi
 
@@ -102,8 +101,11 @@ fi
 echo ""
 echo "[3/5] Installing binaries..."
 mkdir -p "$ISO_PROFILE/airootfs/usr/local/bin"
-if [[ -f "$PROJECT_ROOT/indos-orchestrator/target/release/indos-orchestrator" ]]; then
-    cp "$PROJECT_ROOT/indos-orchestrator/target/release/indos-orchestrator" \
+# Workspace members build into the shared root target/; indos-shell builds
+# into its own target/ (separate workspace root).
+WS_TARGET="$PROJECT_ROOT/target/release"
+if [[ -f "$WS_TARGET/indos-orchestrator" ]]; then
+    cp "$WS_TARGET/indos-orchestrator" \
        "$ISO_PROFILE/airootfs/usr/local/bin/"
 else
     echo "    WARNING: indos-orchestrator binary not found, skipping"
@@ -114,8 +116,8 @@ if [[ -f "$PROJECT_ROOT/indos-shell/target/release/indos-shell" ]]; then
 else
     echo "    WARNING: indos-shell binary not found, skipping"
 fi
-if [[ -f "$PROJECT_ROOT/indos-voice/target/release/indos-voiced" ]]; then
-    cp "$PROJECT_ROOT/indos-voice/target/release/indos-voiced" \
+if [[ -f "$WS_TARGET/indos-voiced" ]]; then
+    cp "$WS_TARGET/indos-voiced" \
        "$ISO_PROFILE/airootfs/usr/local/bin/"
 else
     echo "    WARNING: indos-voiced binary not found, skipping"
