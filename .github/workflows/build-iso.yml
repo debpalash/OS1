@@ -24,7 +24,10 @@ jobs:
           pacman -Syu --noconfirm
           # `findmnt` is provided by util-linux, not a standalone package
           # (pacman errors with "target not found: findmnt" otherwise).
-          pacman -S --noconfirm archiso base-devel rust cargo util-linux git
+          # protobuf/cmake/clang are needed to compile the workspace's lancedb
+          # stack (lance-encoding needs `protoc`); same set as the CI rust job.
+          pacman -S --noconfirm archiso base-devel rust cargo util-linux git \
+            protobuf cmake clang
 
       - name: Build ISO
         run: |
