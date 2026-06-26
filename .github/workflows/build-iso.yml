@@ -24,7 +24,29 @@ jobs:
           pacman -Syu --noconfirm
           # `findmnt` is provided by util-linux, not a standalone package
           # (pacman errors with "target not found: findmnt" otherwise).
-          pacman -S --noconfirm archiso base-devel rust cargo util-linux git
+          # protobuf/cmake/clang: compile the workspace's lancedb stack
+          # (lance-encoding needs `protoc`).
+          # wayland/libxkbcommon/mesa/...: compile indos-shell (iced/Wayland),
+          # which build-iso.sh builds alongside the workspace binaries.
+          # (Same dep sets as the rust + gui jobs in ci.yml.)
+          pacman -S --noconfirm archiso base-devel rust cargo util-linux git \
+            protobuf cmake clang \
+            wayland wayland-protocols libxkbcommon mesa vulkan-icd-loader \
+            fontconfig freetype2
+
+      # Cache the cargo registry and the workspace + shell target dirs. Without
+      # this the uncached release build of the lancedb/lance/datafusion tree
+      # takes ~47 min on a 2-core runner; the cache makes reruns incremental.
+      - name: Cache cargo + target dirs
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            indos-shell/target
+          key: iso-cargo-${{ runner.os }}-${{ hashFiles('Cargo.lock', 'indos-shell/Cargo.lock') }}
+          restore-keys: iso-cargo-${{ runner.os }}-
 
       - name: Build ISO
         run: |
